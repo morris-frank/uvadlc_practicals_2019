@@ -119,6 +119,7 @@ class CrossEntropyModule(object):
     """
     Cross entropy loss module.
     """
+    eps = 1e-10
     def forward(self, x, y):
         """
         Forward pass.
@@ -129,7 +130,7 @@ class CrossEntropyModule(object):
         Returns:
           out: cross entropy loss
         """
-        out = -np.sum(y * np.log(x))
+        out = np.sum(-y * np.log(x+self.eps), axis=1).mean()
         return out
 
     def backward(self, x, y):
@@ -143,5 +144,5 @@ class CrossEntropyModule(object):
           dx: gradient of the loss with the respect to the input x.
         Implement backward pass of the module.
         """
-        dx = - np.divide(x, y)
+        dx = - np.divide(y,x+self.eps)/len(y)
         return dx

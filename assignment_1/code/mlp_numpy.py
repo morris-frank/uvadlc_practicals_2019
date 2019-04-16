@@ -6,7 +6,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modules import * 
+from modules import *
+from itertools import chain
 
 class MLP(object):
   """
@@ -28,18 +29,16 @@ class MLP(object):
       n_classes: number of classes of the classification problem.
                  This number is required in order to specify the
                  output dimensions of the MLP
-    
-    TODO:
-    Implement initialization of the network.
     """
 
-    ########################
-    # PUT YOUR CODE HERE  #
-    #######################
-    raise NotImplementedError
-    ########################
-    # END OF YOUR CODE    #
-    #######################
+    self.layers = []
+    prev_nh = n_inputs
+    for nh in n_hidden:
+      self.layers.append(LinearModule(prev_nh, nh))
+      self.layers.append(ReLUModule())
+      prev_nh = nh
+    self.layers.append(LinearModule(prev_nh, n_classes))
+    self.layers.append(SoftMaxModule())
 
   def forward(self, x):
     """
@@ -50,20 +49,10 @@ class MLP(object):
       x: input to the network
     Returns:
       out: outputs of the network
-    
-    TODO:
-    Implement forward pass of the network.
     """
-
-    ########################
-    # PUT YOUR CODE HERE  #
-    #######################
-    raise NotImplementedError
-    ########################
-    # END OF YOUR CODE    #
-    #######################
-
-    return out
+    for layer in self.layers:
+      x = layer.forward(x)
+    return x
 
   def backward(self, dout):
     """
@@ -71,17 +60,7 @@ class MLP(object):
 
     Args:
       dout: gradients of the loss
-    
-    TODO:
-    Implement backward pass of the network.
     """
-    
-    ########################
-    # PUT YOUR CODE HERE  #
-    #######################
-    raise NotImplementedError
-    ########################
-    # END OF YOUR CODE    #
-    #######################
-
+    for layer in reversed(self.layers):
+      dout = layer.backward(dout)
     return
