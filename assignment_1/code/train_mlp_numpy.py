@@ -12,6 +12,9 @@ import os
 from mlp_numpy import MLP
 from modules import CrossEntropyModule
 import cifar10_utils
+import matplotlib.pyplot as plt
+
+plt.style.use('fivethirtyeight')
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '100'
@@ -72,6 +75,7 @@ def train():
 
     losses = {'train': [], 'test': []}
     accuracies = {'train': [], 'test': []}
+    eval_steps = []
 
     for s in range(FLAGS.max_steps):
         X,y = data['train'].next_batch(FLAGS.batch_size)
@@ -92,16 +96,36 @@ def train():
 
         #Evaluation
         if s%FLAGS.eval_freq == 0 or s == FLAGS.max_steps-1:
+            eval_steps.append(s)
             losses['train'].append(loss_func.forward(out, y))
             accuracies['train'].append(accuracy(out, y))
 
             out = net.forward(X_test)
             losses['test'].append(loss_func.forward(out, y_test))
             accuracies['test'].append(accuracy(out, y_test))
-            
+
             print('Iter {:04d}: Test: {:.2f} ({:f}), Train: {:.2f} ({:f})'.format(
                 s, 100*accuracies['test'][-1], losses['test'][-1], 100*accuracies['train'][-1], losses['train'][-1]))
 
+    # Accuracy plot
+    fig = plt.figure()
+    plt.plot(eval_steps, accuracies['train'], label='train')
+    plt.plot(eval_steps, accuracies['test'], label='test')
+    plt.xlabel('Step')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('accuracy.pdf')
+
+    # Loss plot
+    fig = plt.figure()
+    plt.plot(eval_steps, losses['train'], label='train')
+    plt.plot(eval_steps, losses['test'], label='test')
+    plt.xlabel('Step')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('loss.pdf')
 
 def print_flags():
     """
