@@ -107,25 +107,17 @@ def train():
             print('Iter {:04d}: Test: {:.2f} ({:f}), Train: {:.2f} ({:f})'.format(
                 s, 100*accuracies['test'][-1], losses['test'][-1], 100*accuracies['train'][-1], losses['train'][-1]))
 
-    # Accuracy plot
-    fig = plt.figure()
-    plt.plot(eval_steps, accuracies['train'], label='train')
-    plt.plot(eval_steps, accuracies['test'], label='test')
-    plt.xlabel('Step')
-    plt.ylabel('Accuracy')
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('accuracy.pdf')
+    # Plotting
+    for d,n in [(accuracies, 'Accuracy'),(losses, 'Loss')]:
+        fig = plt.figure()
+        plt.plot(eval_steps, d['train'], label='train')
+        plt.plot(eval_steps, d['test'], label='test')
+        plt.xlabel('Step')
+        plt.ylabel(n)
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(n.lower() + '.pdf')
 
-    # Loss plot
-    fig = plt.figure()
-    plt.plot(eval_steps, losses['train'], label='train')
-    plt.plot(eval_steps, losses['test'], label='test')
-    plt.xlabel('Step')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('loss.pdf')
 
 def print_flags():
     """
