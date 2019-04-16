@@ -116,7 +116,7 @@ def train():
         plt.ylabel(n)
         plt.legend()
         plt.tight_layout()
-        plt.savefig(n.lower() + '.pdf')
+        plt.savefig('np_' + n.lower() + '.pdf')
 
 
 def print_flags():
