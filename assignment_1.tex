@@ -1,0 +1,102 @@
+
+\documentclass{article}
+\usepackage[final]{neurips_2019}
+
+\makeatletter
+\renewcommand{\@noticestring}{Deep Learning, Sommer 2019, Universiteit van Amsterdam}
+\makeatother
+
+\usepackage{comment}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{verbatim}
+
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{nicefrac}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{dsfont}
+\usepackage{bm}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{microtype}
+
+% Matrices
+\newcommand\bM[1]{\ensuremath{\begin{bmatrix}#1\end{bmatrix}}}
+\newcommand\vM[1]{\ensuremath{\begin{vmatrix}#1\end{vmatrix}}}
+\newcommand\BM[1]{\ensuremath{\begin{Bmatrix}#1\end{Bmatrix}}}
+
+% operators and fractions
+\newcommand\·{\ensuremath{\cdot}}
+\newcommand\…{\ensuremath{\ldots}}
+\newcommand\p{\ensuremath{\partial}}
+\renewcommand\t{\ensuremath{\times}}
+\newcommand{\LRA}{\ensuremath{\Leftrightarrow}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\adj}{Adj}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\Dir}{Dir}
+\DeclareMathOperator{\sgn}{sgn}
+
+\newcommand\f[2]{\ensuremath{\frac{#1}{#2}}}
+\newcommand\nf[2]{\ensuremath{\nicefrac{#1}{#2}}}
+\newcommand\pf[2]{\ensuremath{\frac{\partial {#1}}{\partial {#2}}}}
+
+% Typesetting and symbols
+\newcommand*{\B}[1]{\ifmmode\bm{#1}\else\textbf{#1}\fi}
+\newcommand*{\I}[1]{\ifmmode\mathit{#1}\else\textit{#1}\fi}
+\newcommand\1{\ensuremath{\mathds{1}}}
+\newcommand\E{\ensuremath{\mathds{E}}}
+\newcommand\R{\ensuremath{\mathds{R}}}
+\newcommand\N{\ensuremath{\mathcal{N}}}
+\newcommand\w{\ensuremath{\mathbf{w}}}
+
+\renewcommand{\thesubsubsection}{\thesubsection.\alph{subsubsection}}
+
+\title{Assignment 1. MLPs, CNNs and Backpropagation}
+\author{%
+  Maurice Frank\\
+  11650656\\
+  \href{mailto:maurice.frank@posteo.de}{maurice.frank@posteo.de} \\
+}
+
+
+\begin{document}
+\maketitle
+\section{MLP backprop}
+\subsection{}
+\subsubsection{}
+\begin{align}
+  \pf{x^{(N)}}L:\quad
+  \pf L{x_i^{(N)}} &= -t_i\·\f{1}{x_i^{(N)}}\\
+  \Rightarrow \pf{x^{(N)}}L &= -[\hdots \f{t_i}{x_i^{N}}\hdots]\\
+  \pf{x^{(N)}}{\tilde{x}^{(N)}}:\quad
+  \pf{x_i^{(N)}}{\tilde{x_j}^{(N)}} &= \pf{}{\tilde{x}_j^{(N)}}\f{\exp{\tilde{x}_i^{(N)}}}{\sum_k \exp{\tilde{x}_k^{(N)}}}\\
+  &= \f{(\pf{}{\tilde{x}^{(N)}_j}\exp{\tilde{x}^{(N)}_i})\·\sum_k\exp{\tilde{x}^{(N)}_k} - \exp{\tilde{x}^{(N)}_i}\·\pf{}{\tilde{x}^{(N)}_j}\sum_k\exp{\tilde{x}^{(N)}_k}}{(\sum_k\exp{\tilde{x}^{(N)}_k})^2}\\
+  &= \f{\delta_{ij}\exp{\tilde{x}^{(N)}_j}}{\sum_k\exp{\tilde{x}^{(N)}_k}} - \f{\exp{\tilde{x}^{(N)}_i}\·\exp{\tilde{x}^{(N)}_j}}{(\sum_k\exp{\tilde{x}^{(N)}_k})^2}\\
+  &= \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i))\\
+  &\Rightarrow\\
+  \pf{x^{(N)}}{\tilde{x}^{(N)}} &= \bM{& \vdots &\\\hdots & \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}\\
+  \pf{x^{(l<N)}}{\tilde{x}^{(l<N)}}:\quad
+  \pf{x^{(l<N)}}{\tilde{x}^{(l<N)}} &= x^{(l<N)}\oslash\tilde{x}^{(l<N)}\\
+  \pf{\tilde{x}^{(l)}}{x^{(l-1)}}:\quad
+  \pf{\tilde{x}^{(l)}}{x^{(l-1)}} &= \pf{}{x^{(l-1)}} W^{(l)}x^{(l-1)} + b^{(l)}\\&=W^{(l)}\\
+  \pf{\tilde{x}^{(l)}}{W^{(l)}}:\quad
+  \pf{\tilde{x}^{(l)}}{W^{(l)}} &= \pf{}{W^{(l)}}W^{(l)}x^{(l-1)} = \bM{\vdots\\\pf{\tilde{x}^{(l)}_i}{W^{(l)}}\\\vdots}\in\R^{M\t (M\t N)} \\
+  \pf{\tilde{x}^{(l)}}{b^(l)}:\quad
+  \pf{\tilde{x}^{(l)}}{b^(l)} &= \pf{}{b^(l)}b^{(l)} = b^{(l)} \otimes b^{(l)}
+\end{align}
+Note the use of $\oslash$ for element-wise division.
+
+\subsubsection{}
+\begin{align}
+\end{align}
+
+\end{document}
