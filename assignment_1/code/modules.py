@@ -18,12 +18,12 @@ class LinearModule(object):
         """
         self.init_std = 0.0001
         self.params = {
-            'weight': self.init_std * np.random.randn(in_features, out_features),
+            'weight': self.init_std * np.random.randn(out_features, in_features),
             'bias': np.zeros((out_features, 1))
         }
         self.grads = {
-            'weight': np.zeros((in_features, out_features)),
-            'bias': np.zeros((in_features, 1))
+            'weight': np.zeros((out_features, in_features)),
+            'bias': np.zeros((out_features, 1))
         }
 
     def forward(self, x):
@@ -35,7 +35,7 @@ class LinearModule(object):
         Returns:
           out: output of the module
         """
-        out = np.add(self.params['weight'] @ x, self.params['bias'])
+        out = (np.add((self.params['weight'] @ x.T), self.params['bias'])).T
         self.x = x
         return out
 
@@ -48,7 +48,12 @@ class LinearModule(object):
         Returns:
           dx: gradients with respect to the input of the module
         """
-        dx = np.multiply(self.x, dout)
+        dx = dout @ self.params['weight']
+
+        self.grads['bias'] = dout.sum(axis=0)[...,np.newaxis]
+
+        self.grads['weight'] = dout.T @ self.x
+
         return dx
 
 class ReLUModule(object):
@@ -65,7 +70,7 @@ class ReLUModule(object):
           out: output of the module
         """
         self.grad = x > 0
-        out = np.max(x, 0)
+        out = np.multiply(self.grad, x)
         return out
 
     def backward(self, dout):
@@ -93,9 +98,8 @@ class SoftMaxModule(object):
           out: output of the module
         """
         normed_x = np.exp(np.subtract(x, np.max(x, axis=1)[...,np.newaxis]))
-        out = np.divide(normed_x, normed_x.sum(axis=1)[...,np.newaxis])
-        self.sigma = out
-        return out
+        self.out = np.divide(normed_x, normed_x.sum(axis=1)[...,np.newaxis])
+        return self.out
 
     def backward(self, dout):
         """
@@ -106,9 +110,10 @@ class SoftMaxModule(object):
         Returns:
           dx: gradients with respect to the input of the module
         """
-        dx = - self.sigma[:,:,None] * self.sigma[:,None,:]
-        dx += np.apply_along_axis(np.diag, 1, self.sigma)
-        return dx * dout
+        _dx = - self.out[:,:,None] * self.out[:,None,:]
+        _dx += np.apply_along_axis(np.diag, 1, self.out)
+        dx = np.einsum('ij, ijk -> ik', dout, _dx)
+        return dx
 
 class CrossEntropyModule(object):
     """
