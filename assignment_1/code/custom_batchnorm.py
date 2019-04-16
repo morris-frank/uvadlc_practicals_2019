@@ -94,6 +94,12 @@ class CustomBatchNormManualFunction(torch.autograd.Function):
           for the backward pass. Do not store tensors which are unnecessary for the backward pass to save memory!
           For the case that you make use of torch.var be aware that the flag unbiased=False should be set.
         """
+        assert input.size(1) == gamma.size(0)
+
+        μ = input.mean(0)
+        σ = torch.sqrt(input.var(0, unbiased=False) + eps)
+        xhat = (input - μ) / σ
+
 
         ########################
         # PUT YOUR CODE HERE  #
