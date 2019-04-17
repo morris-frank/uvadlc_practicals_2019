@@ -76,7 +76,7 @@
 \begin{align}
   \pf{x^{(N)}}L:\quad
   \pf L{x_i^{(N)}} &= -t_i\·\f{1}{x_i^{(N)}}\\
-  \Rightarrow \pf{x^{(N)}}L &= -[\hdots \f{t_i}{x_i^{N}}\hdots]\\
+  \Rightarrow \pf{x^{(N)}}L &= -[\hdots \f{t_i}{x_i^{(N)}}\hdots]\\
   \pf{x^{(N)}}{\tilde{x}^{(N)}}:\quad
   \pf{x_i^{(N)}}{\tilde{x_j}^{(N)}} &= \pf{}{\tilde{x}_j^{(N)}}\f{\exp{\tilde{x}_i^{(N)}}}{\sum_k \exp{\tilde{x}_k^{(N)}}}\\
   &= \f{(\pf{}{\tilde{x}^{(N)}_j}\exp{\tilde{x}^{(N)}_i})\·\sum_k\exp{\tilde{x}^{(N)}_k} - \exp{\tilde{x}^{(N)}_i}\·\pf{}{\tilde{x}^{(N)}_j}\sum_k\exp{\tilde{x}^{(N)}_k}}{(\sum_k\exp{\tilde{x}^{(N)}_k})^2}\\
@@ -89,7 +89,8 @@
   \pf{\tilde{x}^{(l)}}{x^{(l-1)}}:\quad
   \pf{\tilde{x}^{(l)}}{x^{(l-1)}} &= \pf{}{x^{(l-1)}} W^{(l)}x^{(l-1)} + b^{(l)}\\&=W^{(l)}\\
   \pf{\tilde{x}^{(l)}}{W^{(l)}}:\quad
-  \pf{\tilde{x}^{(l)}}{W^{(l)}} &= \pf{}{W^{(l)}}W^{(l)}x^{(l-1)} = \bM{\vdots\\\pf{\tilde{x}^{(l)}_i}{W^{(l)}}\\\vdots}\in\R^{M\t (M\t N)} \\
+  \pf{\tilde{x}^{(l)}}{W^{(l)}} &= \pf{}{W^{(l)}}W^{(l)}x^{(l-1)} = \bM{\vdots\\\pf{\tilde{x}^{(l)}_i}{W^{(l)}}\\\vdots}\in\R^{M\t (M\t N)}\\
+  \pf{\tilde{x}^{(l)}_i}{W^{(l)}} &= \bM{\vdots\\x^T\\\vdots}\in\R^{M\t N}\\
   \pf{\tilde{x}^{(l)}}{b^(l)}:\quad
   \pf{\tilde{x}^{(l)}}{b^(l)} &= \pf{}{b^(l)}b^{(l)} = b^{(l)} \otimes b^{(l)}
 \end{align}
@@ -97,6 +98,16 @@ Note the use of $\oslash$ for element-wise division.
 
 \subsubsection{}
 \begin{align}
+  \pf{L}{\tilde{x}}:\quad
+  \pf{L}{x}\pf{x}{\tilde{x}}\\
+  \pf{L}{\tilde{x}}:\quad
+  \pf{L}{\tilde{x}}\pf{x}{\tilde{x}}\\
+  \pf{L}{x}:\quad
+  \pf{L}{\tilde{x}}\pf{\tilde{x}}{x}\\
+  \pf{L}{W}:\quad
+  \pf{L}{\tilde{x}}\pf{\tilde{x}}{W}\\
+  \pf{L}{b}:\quad
+  \pf{L}{\tilde{x}}\pf{\tilde{x}}{b}
 \end{align}
 
 \end{document}

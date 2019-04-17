@@ -85,29 +85,18 @@ class CustomBatchNormManualFunction(torch.autograd.Function):
           eps: small float added to the variance for stability
         Returns:
           out: batch-normalized tensor
-
-        TODO:
-          Implement the forward pass of batch normalization
-          Store constant non-tensor objects via ctx.constant=myconstant
-          Store tensors which you need in the backward pass via ctx.save_for_backward(tensor1, tensor2, ...)
-          Intermediate results can be decided to be either recomputed in the backward pass or to be stored
-          for the backward pass. Do not store tensors which are unnecessary for the backward pass to save memory!
-          For the case that you make use of torch.var be aware that the flag unbiased=False should be set.
         """
         assert input.size(1) == gamma.size(0)
 
         μ = input.mean(0)
-        σ = torch.sqrt(input.var(0, unbiased=False) + eps)
-        xhat = (input - μ) / σ
+        inputμ = input - μ
+        σ = input.var(0, unbiased=False)
+        invσ = torch.reciprocal(torch.sqrt(σ + eps))
+        input_hat = inputμ * invσ
+        out = gamma * input_hat + beta
 
-
-        ########################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        ########################
-        # END OF YOUR CODE    #
-        #######################
+        ctx.save_for_backward(inputμ,σ,invσ,input_hat,gamma)
+        ctx.eps = eps
 
         return out
 
@@ -122,22 +111,40 @@ class CustomBatchNormManualFunction(torch.autograd.Function):
                whether tensors need gradients in backward pass
         Returns:
           out: tuple containing gradients for all input arguments
-
-        TODO:
-          Retrieve saved tensors and constants via ctx.saved_tensors and ctx.constant
-          Compute gradients for inputs where ctx.needs_input_grad[idx] is True. Set gradients for other
-          inputs to None. This should be decided dynamically.
         """
 
-        ########################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        ########################
-        # END OF YOUR CODE    #
-        #######################
+        N,D = grad_output.shape
 
-        # return gradients of the three tensor inputs and None for the constant eps
+        if ctx.needs_input_grad[2]:
+            grad_beta = grad_output.sum(0)
+        else:
+            grad_beta = None
+
+        inputμ,σ,invσ,input_hat,gamma = ctx.saved_tensors
+
+        grad_gamma = None
+        grad_input = None
+        if ctx.needs_input_grad[0] or ctx.needs_input_grad[1]:
+            grad_gamma_x = grad_output
+            grad_gamma = (grad_gamma_x*input_hat).sum(0)
+
+        if ctx.needs_input_grad[0]:
+            grad_xhat = grad_gamma_x * gamma
+            grad_ivar = (grad_xhat*inputμ).sum(0)
+
+            grad_sqrt_var = -invσ**2 * grad_ivar
+
+            grad_var = 0.5 * 1. / torch.sqrt(σ+ctx.eps) * grad_sqrt_var
+
+            grad_sq = torch.ones(N,D, dtype=grad_var.dtype) * (1/N) * grad_var
+            grad_inputμ = grad_xhat * invσ + 2*inputμ*grad_sq
+            grad_μ = -1 * grad_inputμ.sum(0)
+
+            grad_x2 = torch.ones(N,D, dtype=grad_μ.dtype) * (1/N) * grad_μ
+            grad_input = grad_inputμ + grad_x2
+
+        if not ctx.needs_input_grad[1]:
+            grad_gamma = None
         return grad_input, grad_gamma, grad_beta, None
 
 
@@ -160,20 +167,14 @@ class CustomBatchNormManualModule(nn.Module):
         Args:
           n_neurons: int specifying the number of neurons
           eps: small float to be added to the variance for stability
-
-        TODO:
-          Save parameters for the number of neurons and eps.
-          Initialize parameters gamma and beta via nn.Parameter
         """
         super(CustomBatchNormManualModule, self).__init__()
 
-        ########################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        ########################
-        # END OF YOUR CODE    #
-        #######################
+        self.ε = eps
+        self.β = nn.Parameter(torch.zeros(n_neurons))
+        self.γ = nn.Parameter(torch.ones(n_neurons))
+        self.n_neurons = n_neurons
+
 
     def forward(self, input):
         """
@@ -183,19 +184,8 @@ class CustomBatchNormManualModule(nn.Module):
           input: input tensor of shape (n_batch, n_neurons)
         Returns:
           out: batch-normalized tensor
-
-        TODO:
-          Check for the correctness of the shape of the input tensor.
-          Instantiate a CustomBatchNormManualFunction.
-          Call it via its .apply() method.
         """
-
-        ########################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        ########################
-        # END OF YOUR CODE    #
-        #######################
-
+        assert input.size(1) == self.n_neurons
+        bn_func = CustomBatchNormManualFunction()
+        out = bn_func.apply(input, self.γ, self.β, self.ε)
         return out
