@@ -56,18 +56,19 @@ def train():
     np.random.seed(42)
 
     data = cifar10_utils.get_cifar10(DATA_DIR_DEFAULT)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     n_inputs = np.prod(data['train'].images.shape[1:])
     n_classes = data['train'].labels.shape[1]
     n_test = data['test'].images.shape[0]
 
     X_test, y_test = data['test'].next_batch(n_test)
-    X_test = torch.from_numpy(X_test)
-    y_test = torch.from_numpy(y_test.argmax(axis=1)).long()
+    X_test = torch.from_numpy(X_test).to(device)
+    y_test = torch.from_numpy(y_test.argmax(axis=1)).long().to(device)
 
-    net = ConvNet(3, n_classes)
+    net = ConvNet(3, n_classes).to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(net.parameters())
+    optimizer = optim.Adam(net.parameters(), lr=FLAGS.learning_rate)
 
     losses = {'train': [], 'test': []}
     accuracies = {'train': [], 'test': []}
@@ -75,8 +76,8 @@ def train():
 
     for s in range(FLAGS.max_steps):
         X, y = data['train'].next_batch(FLAGS.batch_size)
-        X = torch.from_numpy(X)
-        y = torch.from_numpy(y.argmax(axis=1)).long()
+        X = torch.from_numpy(X).to(device)
+        y = torch.from_numpy(y.argmax(axis=1)).long().to(device)
 
         # FORWARD, BACKWARD, AND STEP
         out = net.forward(X)
@@ -110,7 +111,7 @@ def train():
         plt.legend()
         plt.tight_layout()
         plt.savefig('conv_' + n.lower() + '.pdf')
-        
+
     print('Best testing loss: {:.2f} accuracy: {:.2f}'.format(np.min(losses['test']), 100*np.max(accuracies['test'])))
 
 
