@@ -118,6 +118,9 @@ def train():
         plt.tight_layout()
         plt.savefig('torch_' + n.lower() + '.pdf')
 
+    print('Best testing loss: {:.2f} accuracy: {:.2f}'.format(np.min(losses['test']), 100*np.max(accuracies['test'])))
+
+
 
 def print_flags():
     """

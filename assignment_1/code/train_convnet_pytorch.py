@@ -67,7 +67,7 @@ def train():
 
     net = ConvNet(3, n_classes)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=FLAGS.learning_rate, momentum=0.0)
+    optimizer = optim.Adam(net.parameters())
 
     losses = {'train': [], 'test': []}
     accuracies = {'train': [], 'test': []}
@@ -110,6 +110,9 @@ def train():
         plt.legend()
         plt.tight_layout()
         plt.savefig('conv_' + n.lower() + '.pdf')
+        
+    print('Best testing loss: {:.2f} accuracy: {:.2f}'.format(np.min(losses['test']), 100*np.max(accuracies['test'])))
+
 
 def print_flags():
     """
