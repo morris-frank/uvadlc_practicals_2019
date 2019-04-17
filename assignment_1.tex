@@ -66,6 +66,7 @@
   Maurice Frank\\
   11650656\\
   \href{mailto:maurice.frank@posteo.de}{maurice.frank@posteo.de} \\
+  Code: \href{https://github.com/morris-frank/uvadlc_practicals_2019/tree/master/assignment_1/code}{github}
 }
 
 \begin{document}
@@ -169,6 +170,23 @@ Note the use of $\oslash$ for element-wise division and the use of $\delta$ for 
 \end{align*}
 
 \subsection{NumPy MLP}
+The performance of the NumPy implementation of the MLP under differnt hyperparameter settings are show in Tabel~\ref{tab:numpy}.
+The loss and accuracy curves of the best model are shown in Figure~\ref{fig:numpy}.
+Source code is in files \texttt{mlp\_numpy.py}, \texttt{train\_mlp\_numpy.py} and \texttt{modules.py}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{ccccc}
+    Layers & LR & Batch size & Test Accuracy & Test Loss\\\toprule
+    100 & 2e-3 & 200 & 46.86 & 1.51\\
+    10 & 2e-3 & 200 & 39.38 & 1.68\\
+    200 & 1e-3 & 200 & \textbf{50.37} & \textbf{1.42}\\
+    80,50 & 1e-5 & 200 & 11.17 & 2.30\\
+  \end{tabular}
+  \caption{Results for the NumPy MLP under different parameter settings. Layers shows the sorted list of number of neurons for the hidden layers. LR is learning rate. Reported are the highest accuracy and lowest loss on the test set during training.}
+  \label{tab:numpy}
+\end{table}
+
 \begin{figure}
   \begin{tabularx}{\linewidth}{XX}
     \includegraphics[width=\linewidth]{assignment_1/code/np_loss.pdf} &
@@ -179,6 +197,24 @@ Note the use of $\oslash$ for element-wise division and the use of $\delta$ for 
 \end{figure}
 
 \section{PyTorch MLP}
+The performance of the PyTorch MLP model under diffent settings are shown in Table~\ref{tab:pytorch_mlp}.
+The loss and accuracy curves during training of the best performing model are shown in Figure~\ref{fig:pytorch_mlp}.
+Source code is in files \texttt{mlp\_pytorch.py} and \texttt{train\_mlp\_pytorch.py}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{ccccc}
+    Layers & LR & Batch size & Test Accuracy & Test Loss\\\toprule
+    100 & 2e-3 & 200 & 45.58 & 1.61\\
+    10 & 2e-3 & 200 & 39.52 & 1.70\\
+    200 & 1e-3 & 200 & \textbf{48.14} & \textbf{1.53}\\
+    80,50 & 1e-5 & 200 & 31.08 & 2.26\\
+    300 & 1e-5 & 200 & 33.27 & 4.25\\
+  \end{tabular}
+  \caption{Results of the PyTorch MLP using differnt settings for the hyperparameters.}
+  \label{tab:pytorch_mlp}
+\end{table}
+
 \begin{figure}
   \begin{tabularx}{\linewidth}{XX}
     \includegraphics[width=\linewidth]{assignment_1/code/torch_loss.pdf} &
