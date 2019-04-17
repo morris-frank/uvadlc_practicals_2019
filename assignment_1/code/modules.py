@@ -51,7 +51,6 @@ class LinearModule(object):
         dx = dout @ self.params['weight']
 
         self.grads['bias'] = dout.sum(axis=0)[...,np.newaxis]
-
         self.grads['weight'] = dout.T @ self.x
 
         return dx

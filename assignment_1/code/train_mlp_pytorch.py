@@ -49,8 +49,6 @@ def accuracy(predictions, targets):
 def train():
     """
     Performs training and evaluation of MLP model.
-
-    TODO:
     Implement training and evaluation of MLP model. Evaluate your model on the whole test set each eval_freq iterations.
     """
 
