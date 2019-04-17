@@ -136,28 +136,36 @@ Note the use of $\oslash$ for element-wise division and the use of $\delta$ for 
 
 \subsubsection{}
 \begin{align*}
-  \tag{$\pf{\B{L}}{\tilde{\B{x}}}$}
-  \pf{\B{L}}{\B{x}}\pf{\B{x}}{\tilde{\B{x}}}\\
+  \tag{$\pf{\B{L}}{\tilde{\B{x}}^{(N)}}$}
+  \pf{\B{L}}{\tilde{\B{x}}^{(N)}}
+  &= \pf{\B{L}}{\B{x}^{(N)}}\pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}}\\
+  &= \pf{\B{L}}{\B{x}^{(N)}}\·\bM{& \vdots &\\\hdots & \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}
 \end{align*}
 
 \begin{align*}
-  \tag{$\pf{\B{L}}{\tilde{\B{x}}}$}
-  \pf{\B{L}}{\tilde{\B{x}}}\pf{\B{x}}{\tilde{\B{x}}}\\
+  \tag{$\pf{\B{L}}{\tilde{\B{x}}^{(l<N)}}$}
+  \pf{\B{L}}{\tilde{\B{x}}^{(l<N)}}
+  &= \pf{\B{L}}{\tilde{\B{x}}^{(l)}}\pf{\B{x}^{(l)}}{\tilde{\B{x}}^{(l)}}\\
+  &= \pf{\B{L}}{\tilde{\B{x}}^{(l)}}\·\B{x}^{(l)}\oslash\tilde{\B{x}}^{(l)}
 \end{align*}
 
 \begin{align*}
-  \tag{$\pf{\B{L}}{\B{x}}$}
-  \pf{\B{L}}{\tilde{\B{x}}}\pf{\tilde{\B{x}}}{\B{x}}\\
+  \tag{$\pf{\B{L}}{\B{x}^{(l<N)}}$}
+  \pf{\B{L}}{\B{x}^{(l<N)}}
+  &= \pf{\B{L}}{\tilde{\B{x}}^{(l+1)}}\pf{\tilde{\B{x}}^{(l+1)}}{\B{x}^{(l)}}\\
+  &= \pf{\B{L}}{\tilde{\B{x}}^{(l+1)}}\·\B{W}^{(l+1)}\\
 \end{align*}
 
 \begin{align*}
-  \tag{$\pf{\B{L}}{\B{W}}$}
-  \pf{\B{L}}{\tilde{\B{x}}}\pf{\tilde{\B{x}}}{\B{W}}\\
+  \tag{$\pf{\B{L}}{\B{W}^{(l)}}$}
+  \pf{\B{L}}{\B{W}^{(l)}}
+  &= \pf{\B{L}}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{W}^{(l)}}\\
 \end{align*}
 
 \begin{align*}
-  \tag{$\pf{\B{L}}{\B{b}}$}
-  \pf{\B{L}}{\tilde{\B{x}}}\pf{\tilde{\B{x}}}{\B{b}}
+  \tag{$\pf{\B{L}}{\B{b}^{(l)}}$}
+  \pf{\B{L}}{\B{b}^{(l)}}
+  &= \pf{\B{L}}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{b}^{(l)}}
 \end{align*}
 
 \subsection{NumPy MLP}
