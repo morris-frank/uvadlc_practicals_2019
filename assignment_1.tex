@@ -26,6 +26,7 @@
 \usepackage{url}
 \usepackage{booktabs}
 \usepackage{microtype}
+\usepackage{tabularx}
 
 % Matrices
 \newcommand\bM[1]{\ensuremath{\begin{bmatrix}#1\end{bmatrix}}}
@@ -67,47 +68,116 @@
   \href{mailto:maurice.frank@posteo.de}{maurice.frank@posteo.de} \\
 }
 
-
 \begin{document}
 \maketitle
 \section{MLP backprop}
 \subsection{}
 \subsubsection{}
-\begin{align}
-  \pf{x^{(N)}}L:\quad
-  \pf L{x_i^{(N)}} &= -t_i\·\f{1}{x_i^{(N)}}\\
-  \Rightarrow \pf{x^{(N)}}L &= -[\hdots \f{t_i}{x_i^{(N)}}\hdots]\\
-  \pf{x^{(N)}}{\tilde{x}^{(N)}}:\quad
-  \pf{x_i^{(N)}}{\tilde{x_j}^{(N)}} &= \pf{}{\tilde{x}_j^{(N)}}\f{\exp{\tilde{x}_i^{(N)}}}{\sum_k \exp{\tilde{x}_k^{(N)}}}\\
+\begin{align*}
+  \tag{$\pf{\B{x}^{(N)}}{\B{L}}$}
+  \pf{\B{L}}{x_i^{(N)}}
+  &= -\pf{}{x_i^{(N)}}\sum_i t_i \log x_i^{(N)}\\
+  &= -t_i\·\f{1}{x_i^{(N)}}\\
+  &\LRA\\
+  \pf{\B{L}}{\B{x}^{(N)}}
+  &= -[\hdots \f{t_i}{x_i^{(N)}}\hdots]\\
+  &\in\R^{d_N}
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}}$}
+  \pf{x_i^{(N)}}{\tilde{x_j}^{(N)}}
+  &= \pf{}{\tilde{x}_j^{(N)}}\f{\exp{\tilde{x}_i^{(N)}}}{\sum_k \exp{\tilde{\B{x}}_k^{(N)}}}\\
   &= \f{(\pf{}{\tilde{x}^{(N)}_j}\exp{\tilde{x}^{(N)}_i})\·\sum_k\exp{\tilde{x}^{(N)}_k} - \exp{\tilde{x}^{(N)}_i}\·\pf{}{\tilde{x}^{(N)}_j}\sum_k\exp{\tilde{x}^{(N)}_k}}{(\sum_k\exp{\tilde{x}^{(N)}_k})^2}\\
   &= \f{\delta_{ij}\exp{\tilde{x}^{(N)}_j}}{\sum_k\exp{\tilde{x}^{(N)}_k}} - \f{\exp{\tilde{x}^{(N)}_i}\·\exp{\tilde{x}^{(N)}_j}}{(\sum_k\exp{\tilde{x}^{(N)}_k})^2}\\
   &= \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i))\\
   &\Rightarrow\\
-  \pf{x^{(N)}}{\tilde{x}^{(N)}} &= \bM{& \vdots &\\\hdots & \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}\\
-  \pf{x^{(l<N)}}{\tilde{x}^{(l<N)}}:\quad
-  \pf{x^{(l<N)}}{\tilde{x}^{(l<N)}} &= x^{(l<N)}\oslash\tilde{x}^{(l<N)}\\
-  \pf{\tilde{x}^{(l)}}{x^{(l-1)}}:\quad
-  \pf{\tilde{x}^{(l)}}{x^{(l-1)}} &= \pf{}{x^{(l-1)}} W^{(l)}x^{(l-1)} + b^{(l)}\\&=W^{(l)}\\
-  \pf{\tilde{x}^{(l)}}{W^{(l)}}:\quad
-  \pf{\tilde{x}^{(l)}}{W^{(l)}} &= \pf{}{W^{(l)}}W^{(l)}x^{(l-1)} = \bM{\vdots\\\pf{\tilde{x}^{(l)}_i}{W^{(l)}}\\\vdots}\in\R^{M\t (M\t N)}\\
-  \pf{\tilde{x}^{(l)}_i}{W^{(l)}} &= \bM{\vdots\\x^T\\\vdots}\in\R^{M\t N}\\
-  \pf{\tilde{x}^{(l)}}{b^(l)}:\quad
-  \pf{\tilde{x}^{(l)}}{b^(l)} &= \pf{}{b^(l)}b^{(l)} = b^{(l)} \otimes b^{(l)}
-\end{align}
-Note the use of $\oslash$ for element-wise division.
+  \pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}} &= \bM{& \vdots &\\\hdots & \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}\\
+  &\in\R^{d_N\t d_N}
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\B{x}^{(l<N)}}{\tilde{\B{x}}^{(l<N)}}$}
+  \pf{\B{x}^{(l<N)}}{\tilde{\B{x}}^{(l<N)}}
+  &= \pf{}{\tilde{\B{x}}^{(l<N)}}\max(0,\tilde{\B{x}}^{(l<N)})\\
+  &= \B{x}^{(l<N)}\oslash\tilde{\B{x}}^{(l<N)}\\
+  &\in\R^{d_l}
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\tilde{\B{x}}^{(l)}}{\B{x}^{(l-1)}}$}
+  \pf{\tilde{\B{x}}^{(l)}}{\B{x}^{(l-1)}}
+  &= \pf{}{\B{x}^{(l-1)}} \B{W}^{(l)}\B{x}^{(l-1)} + \B{b}^{(l)}\\
+  &=\B{W}^{(l)}\\
+  &\in\R^{d_l\t d_{l-1}}
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\tilde{\B{x}}^{(l)}}{\B{W}^{(l)}}$}
+  \pf{\tilde{\B{x}}^{(l)}}{\B{W}^{(l)}}
+  &= \pf{}{\B{W}^{(l)}}\B{W}^{(l)}\B{x}^{(l-1)}\\
+  &= \bM{\vdots\\\pf{\tilde{\B{x}}^{(l)}_i}{\B{W}^{(l)}}\\\vdots}\\
+  &\in\R^{d_l\t (d_l\t d_{l-1})}\\
+  &\text{with}\\
+  \pf{\tilde{\B{x}}^{(l)}_i}{\B{W}^{(l)}}
+  &= \bM{\vdots\\{\B{x}^{(l-1)}}^T\\\vdots}\\
+  &\in\R^{d_l\t d_{l-1}}
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\tilde{\B{x}}^{(l)}}{\B{b}^(l)}$}
+  \pf{\tilde{\B{x}}^{(l)}}{\B{b}^{(l)}}
+  &= \pf{}{\B{b}^{(l)}}\B{b}^{(l)}\\
+  &= \B{b}^{(l)} \otimes \B{b}^{(l)}\\
+  &\in\R^{?????}
+\end{align*}
+
+Note the use of $\oslash$ for element-wise division and the use of $\delta$ for the Kronecker-Delta.
 
 \subsubsection{}
-\begin{align}
-  \pf{L}{\tilde{x}}:\quad
-  \pf{L}{x}\pf{x}{\tilde{x}}\\
-  \pf{L}{\tilde{x}}:\quad
-  \pf{L}{\tilde{x}}\pf{x}{\tilde{x}}\\
-  \pf{L}{x}:\quad
-  \pf{L}{\tilde{x}}\pf{\tilde{x}}{x}\\
-  \pf{L}{W}:\quad
-  \pf{L}{\tilde{x}}\pf{\tilde{x}}{W}\\
-  \pf{L}{b}:\quad
-  \pf{L}{\tilde{x}}\pf{\tilde{x}}{b}
-\end{align}
+\begin{align*}
+  \tag{$\pf{\B{L}}{\tilde{\B{x}}}$}
+  \pf{\B{L}}{\B{x}}\pf{\B{x}}{\tilde{\B{x}}}\\
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\B{L}}{\tilde{\B{x}}}$}
+  \pf{\B{L}}{\tilde{\B{x}}}\pf{\B{x}}{\tilde{\B{x}}}\\
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\B{L}}{\B{x}}$}
+  \pf{\B{L}}{\tilde{\B{x}}}\pf{\tilde{\B{x}}}{\B{x}}\\
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\B{L}}{\B{W}}$}
+  \pf{\B{L}}{\tilde{\B{x}}}\pf{\tilde{\B{x}}}{\B{W}}\\
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{\B{L}}{\B{b}}$}
+  \pf{\B{L}}{\tilde{\B{x}}}\pf{\tilde{\B{x}}}{\B{b}}
+\end{align*}
+
+\subsection{NumPy MLP}
+\begin{figure}
+  \begin{tabularx}{\linewidth}{XX}
+    \includegraphics[width=\linewidth]{assignment_1/code/np_loss.pdf} &
+    \includegraphics[width=\linewidth]{assignment_1/code/np_accuracy.pdf}
+  \end{tabularx}
+  \caption{\textbf{Left} the loss and \textbf{right} the accuracy during training of the NumPy MLP implementation.}
+  \label{fig:numpy}
+\end{figure}
+
+\section{PyTorch MLP}
+\begin{figure}
+  \begin{tabularx}{\linewidth}{XX}
+    \includegraphics[width=\linewidth]{assignment_1/code/torch_loss.pdf} &
+    \includegraphics[width=\linewidth]{assignment_1/code/torch_accuracy.pdf}
+  \end{tabularx}
+  \caption{\textbf{Left} the loss and \textbf{right} the accuracy during training of the PyTorch MLP implementation.}
+  \label{fig:pytorch_mlp}
+\end{figure}
 
 \end{document}
