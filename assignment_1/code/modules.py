@@ -52,7 +52,7 @@ class LinearModule(object):
         """
         dx = dout @ self.params['weight']
 
-        self.grads['bias'] = dout.sum(axis=0)[...,np.newaxis]
+        self.grads['bias'] = dout.sum(axis=0)[..., np.newaxis]
         self.grads['weight'] = dout.T @ self.x
 
         return dx
@@ -62,6 +62,9 @@ class ReLUModule(object):
     """
     ReLU activation module.
     """
+    def __init__(self):
+        self.grad = None
+
     def forward(self, x):
         """
         Forward pass.
@@ -92,6 +95,9 @@ class SoftMaxModule(object):
     """
     Softmax activation module.
     """
+    def __init__(self):
+        self.out = None
+
     def forward(self, x):
         """
         Forward pass.

@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from torch import nn
-import torch.nn.functional as F
+import torch.nn.functional as functional
 
 
 class MLP(nn.Module):
@@ -49,6 +49,6 @@ class MLP(nn.Module):
           out: outputs of the network
         """
         for layer in self.hidden:
-            x = F.relu(layer(x))
+            x = functional.relu(layer(x))
         x = self.classifier(x)
         return x

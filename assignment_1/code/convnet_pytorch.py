@@ -36,7 +36,7 @@ class ConvNet(nn.Module):
             return nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.filter = nn.Sequential(
-            conv(n_channels,64),
+            conv(n_channels, 64),
             pool(),
             conv(64, 128),
             pool(),

@@ -79,7 +79,7 @@ def train():
         y = torch.from_numpy(y.argmax(axis=1)).long().to(device)
 
         # FORWARD, BACKWARD, AND STEP
-        out = net.forward(X)
+        out = net.forward(x)
         net.zero_grad()
         loss = criterion(out, y)
         loss.backward()
@@ -138,15 +138,15 @@ def main():
 if __name__ == '__main__':
     # Command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--learning_rate', type = float, default = LEARNING_RATE_DEFAULT,
+    parser.add_argument('--learning_rate', type=float, default=LEARNING_RATE_DEFAULT,
                         help='Learning rate')
-    parser.add_argument('--max_steps', type = int, default = MAX_STEPS_DEFAULT,
+    parser.add_argument('--max_steps', type=int, default=MAX_STEPS_DEFAULT,
                         help='Number of steps to run trainer.')
-    parser.add_argument('--batch_size', type = int, default = BATCH_SIZE_DEFAULT,
+    parser.add_argument('--batch_size', type=int, default=BATCH_SIZE_DEFAULT,
                         help='Batch size to run trainer.')
     parser.add_argument('--eval_freq', type=int, default=EVAL_FREQ_DEFAULT,
                         help='Frequency of evaluation on the test set')
-    parser.add_argument('--data_dir', type = str, default = DATA_DIR_DEFAULT,
+    parser.add_argument('--data_dir', type=str, default=DATA_DIR_DEFAULT,
                         help='Directory for storing input data')
     FLAGS, unparsed = parser.parse_known_args()
     main()

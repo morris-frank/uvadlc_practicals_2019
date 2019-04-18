@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.autograd
 
 """
 The modules/function here implement custom versions of batch normalization in PyTorch.
@@ -20,33 +21,33 @@ class CustomBatchNormAutograd(nn.Module):
     is dealt with by the automatic differentiation provided by PyTorch.
     """
 
-    def __init__(self, n_neurons, eps=1e-5):
+    def __init__(self, n_neurons, ε=1e-5):
         """
         Initializes CustomBatchNormAutograd object.
 
         Args:
           n_neurons: int specifying the number of neurons
-          eps: small float to be added to the variance for stability
+          ε: small float to be added to the variance for stability
         """
         super(CustomBatchNormAutograd, self).__init__()
-        self.ε = eps
+        self.ε = ε
         self.β = nn.Parameter(torch.zeros(n_neurons))
         self.γ = nn.Parameter(torch.ones(n_neurons))
         self.n_neurons = n_neurons
 
-    def forward(self, input:torch.Tensor):
+    def forward(self, inputs: torch.Tensor):
         """
         Compute the batch normalization
 
         Args:
-          input: input tensor of shape (n_batch, n_neurons)
+          inputs: input tensor of shape (n_batch, n_neurons)
         Returns:
           out: batch-normalized tensor
         """
-        assert input.size(1) == self.n_neurons
-        μ = input.mean(0)
-        σ = torch.sqrt(input.var(0, unbiased=False) + self.ε)
-        x = (input - μ) / σ
+        assert inputs.size(1) == self.n_neurons
+        μ = inputs.mean(0)
+        σ = torch.sqrt(inputs.var(0, unbiased=False) + self.ε)
+        x = (inputs - μ) / σ
 
         out = self.γ * x + self.β
         return out
@@ -173,16 +174,16 @@ class CustomBatchNormManualModule(nn.Module):
         self.γ = nn.Parameter(torch.ones(n_neurons))
         self.n_neurons = n_neurons
 
-    def forward(self, input):
+    def forward(self, inputs):
         """
         Compute the batch normalization via CustomBatchNormManualFunction
 
         Args:
-          input: input tensor of shape (n_batch, n_neurons)
+          inputs: input tensor of shape (n_batch, n_neurons)
         Returns:
           out: batch-normalized tensor
         """
-        assert input.size(1) == self.n_neurons
+        assert inputs.size(1) == self.n_neurons
         bn_func = CustomBatchNormManualFunction()
-        out = bn_func.apply(input, self.γ, self.β, self.ε)
+        out = bn_func.apply(inputs, self.γ, self.β, self.ε)
         return out
