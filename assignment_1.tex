@@ -35,16 +35,22 @@
 
 % operators and fractions
 \newcommand\·{\ensuremath{\cdot}}
-\newcommand\…{\ensuremath{\ldots}}
+\newcommand\…{\ensuremath{\dots}}
 \newcommand\p{\ensuremath{\partial}}
 \renewcommand\t{\ensuremath{\times}}
-\newcommand{\LRA}{\ensuremath{\Leftrightarrow}}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator{\adj}{Adj}
 \DeclareMathOperator{\Tr}{Tr}
 \DeclareMathOperator{\Dir}{Dir}
 \DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\soft}{softmax}
+\DeclareMathOperator{\diag}{diag}
+
+% unicode to latex
+\newcommand{\⇔}{\ensuremath{\Leftrightarrow}}
+\newcommand{\⇐}{\ensuremath{\Rightarrow}}
+\newcommand{\⇒}{\ensuremath{\Leftarrow}}
 
 \newcommand\f[2]{\ensuremath{\frac{#1}{#2}}}
 \newcommand\nf[2]{\ensuremath{\nicefrac{#1}{#2}}}
@@ -55,11 +61,11 @@
 \newcommand*{\I}[1]{\ifmmode\mathit{#1}\else\textit{#1}\fi}
 \newcommand\1{\ensuremath{\mathds{1}}}
 \newcommand\E{\ensuremath{\mathds{E}}}
-\newcommand\R{\ensuremath{\mathds{R}}}
+\newcommand\ℝ{\ensuremath{\mathds{R}}}
 \newcommand\N{\ensuremath{\mathcal{N}}}
-\newcommand\w{\ensuremath{\mathbf{w}}}
 
-\renewcommand{\thesubsubsection}{\thesubsection.\alph{subsubsection}}
+
+\renewcommand{\thesubsubsection}{\thesubsection.\alph{subsubsection})}
 
 \title{Assignment 1. MLPs, CNNs and Backpropagation}
 \author{%
@@ -71,38 +77,40 @@
 
 \begin{document}
 \maketitle
-\section{MLP backprop}
-\subsection{}
+\section{MLP backpropagation}
+\subsection{Analytical derivation of gradients}
 \subsubsection{}
 \begin{align*}
-  \tag{$\pf{\B{x}^{(N)}}{\B{L}}$}
-  \pf{\B{L}}{x_i^{(N)}}
+  \tag{$\pf{\B{x}^{(N)}}{L}$}
+  \pf{L}{x_i^{(N)}}
   &= -\pf{}{x_i^{(N)}}\sum_i t_i \log x_i^{(N)}\\
   &= -t_i\·\f{1}{x_i^{(N)}}\\
-  &\LRA\\
-  \pf{\B{L}}{\B{x}^{(N)}}
-  &= -[\hdots \f{t_i}{x_i^{(N)}}\hdots]\\
-  &\in\R^{d_N}
+  &\⇔\\
+  \pf{L}{\B{x}^{(N)}}
+  &= -[\dotsb \f{t_i}{x_i^{(N)}}\dotsb]\\
+  &= \B{t}\oslash\B{x}^{(N)}\\
+  &\in\ℝ^{d_N}
 \end{align*}
 
 \begin{align*}
   \tag{$\pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}}$}
   \pf{x_i^{(N)}}{\tilde{x_j}^{(N)}}
   &= \pf{}{\tilde{x}_j^{(N)}}\f{\exp{\tilde{x}_i^{(N)}}}{\sum_k \exp{\tilde{\B{x}}_k^{(N)}}}\\
-  &= \f{(\pf{}{\tilde{x}^{(N)}_j}\exp{\tilde{x}^{(N)}_i})\·\sum_k\exp{\tilde{x}^{(N)}_k} - \exp{\tilde{x}^{(N)}_i}\·\pf{}{\tilde{x}^{(N)}_j}\sum_k\exp{\tilde{x}^{(N)}_k}}{(\sum_k\exp{\tilde{x}^{(N)}_k})^2}\\
-  &= \f{\delta_{ij}\exp{\tilde{x}^{(N)}_j}}{\sum_k\exp{\tilde{x}^{(N)}_k}} - \f{\exp{\tilde{x}^{(N)}_i}\·\exp{\tilde{x}^{(N)}_j}}{(\sum_k\exp{\tilde{x}^{(N)}_k})^2}\\
-  &= \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i))\\
+  &= \f{\left(\pf{}{\tilde{x}^{(N)}_j}\exp{\tilde{x}^{(N)}_i}\right)\·\sum_k\exp{\tilde{x}^{(N)}_k} - \exp{\tilde{x}^{(N)}_i}\·\pf{}{\tilde{x}^{(N)}_j}\sum_k\exp{\tilde{x}^{(N)}_k}}{\left(\sum_k\exp{\tilde{x}^{(N)}_k}\right)^2}\\
+  &= \f{\delta_{ij}\exp{\tilde{x}^{(N)}_j}}{\sum_k\exp{\tilde{x}^{(N)}_k}} - \f{\exp{\tilde{x}^{(N)}_i}\·\exp{\tilde{x}^{(N)}_j}}{\left(\sum_k\exp{\tilde{x}^{(N)}_k}\right)^2}\\
+  &= \soft(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \soft(\tilde{x}^{(N)}_i))\\
   &\Rightarrow\\
-  \pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}} &= \bM{& \vdots &\\\hdots & \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}\\
-  &\in\R^{d_N\t d_N}
+  \pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}} &= \bM{& \vdots &\\\hdots & \soft(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \soft(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}\\
+  &= \diag(\soft(\tilde{\B{x}}^{(N)})) -\soft(\tilde{\B{x}}^{(N)})\otimes \soft(\tilde{\B{x}}^{(N)})
+  &\in\ℝ^{d_N\t d_N}
 \end{align*}
 
 \begin{align*}
   \tag{$\pf{\B{x}^{(l<N)}}{\tilde{\B{x}}^{(l<N)}}$}
   \pf{\B{x}^{(l<N)}}{\tilde{\B{x}}^{(l<N)}}
   &= \pf{}{\tilde{\B{x}}^{(l<N)}}\max(0,\tilde{\B{x}}^{(l<N)})\\
-  &= \B{x}^{(l<N)}\oslash\tilde{\B{x}}^{(l<N)}\\
-  &\in\R^{d_l}
+  &= \diag(\B{x}^{(l<N)}\oslash\tilde{\B{x}}^{(l<N)})\\
+  &\in\ℝ^{d_l\t d_l}
 \end{align*}
 
 \begin{align*}
@@ -110,7 +118,7 @@
   \pf{\tilde{\B{x}}^{(l)}}{\B{x}^{(l-1)}}
   &= \pf{}{\B{x}^{(l-1)}} \B{W}^{(l)}\B{x}^{(l-1)} + \B{b}^{(l)}\\
   &=\B{W}^{(l)}\\
-  &\in\R^{d_l\t d_{l-1}}
+  &\in\ℝ^{d_l\t d_{l-1}}
 \end{align*}
 
 \begin{align*}
@@ -118,56 +126,59 @@
   \pf{\tilde{\B{x}}^{(l)}}{\B{W}^{(l)}}
   &= \pf{}{\B{W}^{(l)}}\B{W}^{(l)}\B{x}^{(l-1)}\\
   &= \bM{\vdots\\\pf{\tilde{\B{x}}^{(l)}_i}{\B{W}^{(l)}}\\\vdots}\\
-  &\in\R^{d_l\t (d_l\t d_{l-1})}\\
+  &\in\ℝ^{d_l\t (d_l\t d_{l-1})}\\
   &\text{with}\\
   \pf{\tilde{\B{x}}^{(l)}_i}{\B{W}^{(l)}}
   &= \bM{\vdots\\{\B{x}^{(l-1)}}^T\\\vdots}\\
-  &\in\R^{d_l\t d_{l-1}}
+  &\in\ℝ^{d_l\t d_{l-1}}
 \end{align*}
 
 \begin{align*}
   \tag{$\pf{\tilde{\B{x}}^{(l)}}{\B{b}^(l)}$}
   \pf{\tilde{\B{x}}^{(l)}}{\B{b}^{(l)}}
   &= \pf{}{\B{b}^{(l)}}\B{b}^{(l)}\\
-  &= \B{b}^{(l)} \otimes \B{b}^{(l)}\\
-  &\in\R^{?????}
+  &= \1^{d_l\t d_l}\\
+  &\in\ℝ^{d_l\t d_l}
 \end{align*}
 
-Note the use of $\oslash$ for element-wise division and the use of $\delta$ for the Kronecker-Delta.
+Note the use of $\oslash$ for element-wise division, the use of $\delta$ for the Kronecker-Delta and the use of $\otimes$ for the Outer Product.
 
 \subsubsection{}
 \begin{align*}
-  \tag{$\pf{\B{L}}{\tilde{\B{x}}^{(N)}}$}
-  \pf{\B{L}}{\tilde{\B{x}}^{(N)}}
-  &= \pf{\B{L}}{\B{x}^{(N)}}\pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}}\\
-  &= \pf{\B{L}}{\B{x}^{(N)}}\·\bM{& \vdots &\\\hdots & \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}
+  \tag{$\pf{L}{\tilde{\B{x}}^{(N)}}$}
+  \pf{L}{\tilde{\B{x}}^{(N)}}
+  &= \pf{L}{\B{x}^{(N)}}\pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}}\\
+  &= \pf{L}{\B{x}^{(N)}}\·\bM{& \vdots &\\\hdots & \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}
 \end{align*}
 
 \begin{align*}
-  \tag{$\pf{\B{L}}{\tilde{\B{x}}^{(l<N)}}$}
-  \pf{\B{L}}{\tilde{\B{x}}^{(l<N)}}
-  &= \pf{\B{L}}{\tilde{\B{x}}^{(l)}}\pf{\B{x}^{(l)}}{\tilde{\B{x}}^{(l)}}\\
-  &= \pf{\B{L}}{\tilde{\B{x}}^{(l)}}\·\B{x}^{(l)}\oslash\tilde{\B{x}}^{(l)}
+  \tag{$\pf{L}{\tilde{\B{x}}^{(l<N)}}$}
+  \pf{L}{\tilde{\B{x}}^{(l<N)}}
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}\pf{\B{x}^{(l)}}{\tilde{\B{x}}^{(l)}}\\
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}\·\B{x}^{(l)}\oslash\tilde{\B{x}}^{(l)}
 \end{align*}
 
 \begin{align*}
-  \tag{$\pf{\B{L}}{\B{x}^{(l<N)}}$}
-  \pf{\B{L}}{\B{x}^{(l<N)}}
-  &= \pf{\B{L}}{\tilde{\B{x}}^{(l+1)}}\pf{\tilde{\B{x}}^{(l+1)}}{\B{x}^{(l)}}\\
-  &= \pf{\B{L}}{\tilde{\B{x}}^{(l+1)}}\·\B{W}^{(l+1)}\\
+  \tag{$\pf{L}{\B{x}^{(l<N)}}$}
+  \pf{L}{\B{x}^{(l<N)}}
+  &= \pf{L}{\tilde{\B{x}}^{(l+1)}}\pf{\tilde{\B{x}}^{(l+1)}}{\B{x}^{(l)}}\\
+  &= \pf{L}{\tilde{\B{x}}^{(l+1)}}\·\B{W}^{(l+1)}\\
 \end{align*}
 
 \begin{align*}
-  \tag{$\pf{\B{L}}{\B{W}^{(l)}}$}
-  \pf{\B{L}}{\B{W}^{(l)}}
-  &= \pf{\B{L}}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{W}^{(l)}}\\
+  \tag{$\pf{L}{\B{W}^{(l)}}$}
+  \pf{L}{\B{W}^{(l)}}
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{W}^{(l)}}\\
 \end{align*}
 
 \begin{align*}
-  \tag{$\pf{\B{L}}{\B{b}^{(l)}}$}
-  \pf{\B{L}}{\B{b}^{(l)}}
-  &= \pf{\B{L}}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{b}^{(l)}}
+  \tag{$\pf{L}{\B{b}^{(l)}}$}
+  \pf{L}{\B{b}^{(l)}}
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{b}^{(l)}}
 \end{align*}
+
+\subsubsection{}
+If we use batchsize\…\…\…
 
 \subsection{NumPy MLP}
 The performance of the NumPy implementation of the MLP under differnt hyperparameter settings are show in Tabel~\ref{tab:numpy}.
