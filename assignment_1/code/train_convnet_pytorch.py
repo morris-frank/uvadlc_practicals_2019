@@ -28,6 +28,7 @@ DATA_DIR_DEFAULT = './cifar10/cifar-10-batches-py'
 
 FLAGS = None
 
+
 def accuracy(predictions, targets):
     """
     Computes the prediction accuracy, i.e. the average of correct predictions
@@ -35,15 +36,14 @@ def accuracy(predictions, targets):
 
     Args:
       predictions: 2D float array of size [batch_size, n_classes]
-      labels: 2D int array of size [batch_size, n_classes]
+      targets: 2D int array of size [batch_size, n_classes]
               with one-hot encoding. Ground truth labels for
               each sample in the batch
     Returns:
       accuracy: scalar float, the accuracy of predictions,
                 i.e. the average correct predictions over the whole batch
     """
-    accuracy = np.mean((predictions.detach().numpy().argmax(axis=1) == targets.numpy()))
-    return accuracy
+    return np.mean((predictions.detach().numpy().argmax(axis=1) == targets.numpy()))
 
 
 def train():
@@ -51,19 +51,18 @@ def train():
     Performs training and evaluation of ConvNet model.
     """
 
-    ### DO NOT CHANGE SEEDS!
+    # DO NOT CHANGE SEEDS!
     # Set the random seeds for reproducibility
     np.random.seed(42)
 
     data = cifar10_utils.get_cifar10(DATA_DIR_DEFAULT)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    n_inputs = np.prod(data['train'].images.shape[1:])
     n_classes = data['train'].labels.shape[1]
     n_test = data['test'].images.shape[0]
 
-    X_test, y_test = data['test'].next_batch(n_test)
-    X_test = torch.from_numpy(X_test).to(device)
+    x_test, y_test = data['test'].next_batch(n_test)
+    x_test = torch.from_numpy(x_test).to(device)
     y_test = torch.from_numpy(y_test.argmax(axis=1)).long().to(device)
 
     net = ConvNet(3, n_classes).to(device)
@@ -75,8 +74,8 @@ def train():
     eval_steps = []
 
     for s in range(FLAGS.max_steps):
-        X, y = data['train'].next_batch(FLAGS.batch_size)
-        X = torch.from_numpy(X).to(device)
+        x, y = data['train'].next_batch(FLAGS.batch_size)
+        x = torch.from_numpy(x).to(device)
         y = torch.from_numpy(y.argmax(axis=1)).long().to(device)
 
         # FORWARD, BACKWARD, AND STEP
@@ -92,18 +91,17 @@ def train():
             losses['train'].append(loss)
             accuracies['train'].append(accuracy(out, y))
 
-            out = net.forward(X_test)
+            out = net.forward(x_test)
             losses['test'].append(criterion(out, y_test))
-            #losses['test'].append(0)
             accuracies['test'].append(accuracy(out, y_test))
-            #accuracies['test'].append(0)
 
             print('Iter {:04d}: Test: {:.2f} ({:f}), Train: {:.2f} ({:f})'.format(
-                s, 100 * accuracies['test'][-1], losses['test'][-1], 100 * accuracies['train'][-1], losses['train'][-1]))
+                s, 100 * accuracies['test'][-1], losses['test'][-1],
+                100 * accuracies['train'][-1], losses['train'][-1]))
 
     # Plotting
     for d, n in [(accuracies, 'Accuracy'), (losses, 'Loss')]:
-        fig = plt.figure()
+        plt.figure()
         plt.plot(eval_steps, d['train'], label='train')
         plt.plot(eval_steps, d['test'], label='test')
         plt.xlabel('Step')
@@ -122,6 +120,7 @@ def print_flags():
     for key, value in vars(FLAGS).items():
         print(key + ' : ' + str(value))
 
+
 def main():
     """
     Main function
@@ -134,6 +133,7 @@ def main():
 
     # Run the training operation
     train()
+
 
 if __name__ == '__main__':
     # Command line arguments
@@ -149,5 +149,4 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', type = str, default = DATA_DIR_DEFAULT,
                         help='Directory for storing input data')
     FLAGS, unparsed = parser.parse_known_args()
-
     main()

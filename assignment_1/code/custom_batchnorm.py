@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import torch.nn as nn
 
@@ -11,6 +10,7 @@ You should fill in code into indicated sections.
 ######################################################################################
 # Code for Question 3.1
 ######################################################################################
+
 
 class CustomBatchNormAutograd(nn.Module):
     """
@@ -50,7 +50,6 @@ class CustomBatchNormAutograd(nn.Module):
 
         out = self.γ * x + self.β
         return out
-
 
 
 ######################################################################################
@@ -95,11 +94,10 @@ class CustomBatchNormManualFunction(torch.autograd.Function):
         input_hat = inputμ * invσ
         out = gamma * input_hat + beta
 
-        ctx.save_for_backward(inputμ,σ,invσ,input_hat,gamma)
+        ctx.save_for_backward(inputμ, σ, invσ, input_hat, gamma)
         ctx.eps = eps
 
         return out
-
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -109,18 +107,19 @@ class CustomBatchNormManualFunction(torch.autograd.Function):
         Args:
           ctx: context object handling storing and retrival of tensors and constants and specifying
                whether tensors need gradients in backward pass
+          grad_output: The previous grad output
         Returns:
           out: tuple containing gradients for all input arguments
         """
 
-        N,D = grad_output.shape
+        N, D = grad_output.shape
 
         if ctx.needs_input_grad[2]:
             grad_beta = grad_output.sum(0)
         else:
             grad_beta = None
 
-        inputμ,σ,invσ,input_hat,gamma = ctx.saved_tensors
+        inputμ, σ, invσ, input_hat, gamma = ctx.saved_tensors
 
         grad_gamma = None
         grad_input = None
@@ -148,7 +147,6 @@ class CustomBatchNormManualFunction(torch.autograd.Function):
         return grad_input, grad_gamma, grad_beta, None
 
 
-
 ######################################################################################
 # Code for Question 3.2 c)
 ######################################################################################
@@ -174,7 +172,6 @@ class CustomBatchNormManualModule(nn.Module):
         self.β = nn.Parameter(torch.zeros(n_neurons))
         self.γ = nn.Parameter(torch.ones(n_neurons))
         self.n_neurons = n_neurons
-
 
     def forward(self, input):
         """

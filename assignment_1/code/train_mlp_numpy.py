@@ -28,6 +28,7 @@ DATA_DIR_DEFAULT = './cifar10/cifar-10-batches-py'
 
 FLAGS = None
 
+
 def accuracy(predictions, targets):
     """
     Computes the prediction accuracy, i.e. the average of correct predictions
@@ -35,15 +36,15 @@ def accuracy(predictions, targets):
 
     Args:
       predictions: 2D float array of size [batch_size, n_classes]
-      labels: 2D int array of size [batch_size, n_classes]
+      targets: 2D int array of size [batch_size, n_classes]
               with one-hot encoding. Ground truth labels for
               each sample in the batch
     Returns:
       accuracy: scalar float, the accuracy of predictions,
                 i.e. the average correct predictions over the whole batch
     """
-    accuracy = np.mean((predictions.argmax(axis=1) == targets.argmax(axis=1)))
-    return accuracy
+    return np.mean((predictions.argmax(axis=1) == targets.argmax(axis=1)))
+
 
 def train():
     """
@@ -53,7 +54,7 @@ def train():
     # Set the random seeds for reproducibility
     np.random.seed(42)
 
-    ## Prepare all functions
+    # Prepare all functions
     # Get number of units in each hidden layer specified in the string such as 100,100
     if FLAGS.dnn_hidden_units:
         dnn_hidden_units = FLAGS.dnn_hidden_units.split(",")
@@ -67,8 +68,8 @@ def train():
     n_classes = data['train'].labels.shape[1]
     n_test = data['test'].images.shape[0]
 
-    X_test,y_test = data['test'].next_batch(n_test)
-    X_test = X_test.reshape((n_test, n_inputs))
+    x_test, y_test = data['test'].next_batch(n_test)
+    x_test = x_test.reshape((n_test, n_inputs))
 
     net = MLP(n_inputs, dnn_hidden_units, n_classes)
     loss_func = CrossEntropyModule()
@@ -78,38 +79,38 @@ def train():
     eval_steps = []
 
     for s in range(FLAGS.max_steps):
-        X,y = data['train'].next_batch(FLAGS.batch_size)
-        X = X.reshape((FLAGS.batch_size, n_inputs))
+        x, y = data['train'].next_batch(FLAGS.batch_size)
+        x = x.reshape((FLAGS.batch_size, n_inputs))
 
-        #FORWARD
-        out = net.forward(X)
+        # FORWARD
+        out = net.forward(x)
 
-        #BACKWARD
-        dLoss = loss_func.backward(out, y)
-        net.backward(dLoss)
+        # BACKWARD
+        dloss = loss_func.backward(out, y)
+        net.backward(dloss)
 
-        #UPDATE
-        for grad_layer in filter(lambda x:hasattr(x, 'grads'), net.layers):
+        # UPDATE
+        for grad_layer in filter(lambda l: hasattr(l, 'grads'), net.layers):
             grad_layer.params['weight'] -= FLAGS.learning_rate * grad_layer.grads['weight']
             grad_layer.params['bias'] -= FLAGS.learning_rate * grad_layer.grads['bias']
 
-
-        #Evaluation
-        if s%FLAGS.eval_freq == 0 or s == FLAGS.max_steps-1:
+        # Evaluation
+        if s % FLAGS.eval_freq == 0 or s == FLAGS.max_steps-1:
             eval_steps.append(s)
             losses['train'].append(loss_func.forward(out, y))
             accuracies['train'].append(accuracy(out, y))
 
-            out = net.forward(X_test)
+            out = net.forward(x_test)
             losses['test'].append(loss_func.forward(out, y_test))
             accuracies['test'].append(accuracy(out, y_test))
 
             print('Iter {:04d}: Test: {:.2f} ({:f}), Train: {:.2f} ({:f})'.format(
-                s, 100*accuracies['test'][-1], losses['test'][-1], 100*accuracies['train'][-1], losses['train'][-1]))
+                s, 100*accuracies['test'][-1], losses['test'][-1],
+                100*accuracies['train'][-1], losses['train'][-1]))
 
     # Plotting
-    for d,n in [(accuracies, 'Accuracy'),(losses, 'Loss')]:
-        fig = plt.figure()
+    for d, n in [(accuracies, 'Accuracy'), (losses, 'Loss')]:
+        plt.figure()
         plt.plot(eval_steps, d['train'], label='train')
         plt.plot(eval_steps, d['test'], label='test')
         plt.xlabel('Step')
@@ -120,12 +121,14 @@ def train():
 
     print('Best testing loss: {:.2f} accuracy: {:.2f}'.format(np.min(losses['test']), 100*np.max(accuracies['test'])))
 
+
 def print_flags():
     """
     Prints all entries in FLAGS variable.
     """
     for key, value in vars(FLAGS).items():
         print(key + ' : ' + str(value))
+
 
 def main():
     """
@@ -140,20 +143,21 @@ def main():
     # Run the training operation
     train()
 
+
 if __name__ == '__main__':
     # Command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dnn_hidden_units', type = str, default = DNN_HIDDEN_UNITS_DEFAULT,
+    parser.add_argument('--dnn_hidden_units', type=str, default=DNN_HIDDEN_UNITS_DEFAULT,
                         help='Comma separated list of number of units in each hidden layer')
-    parser.add_argument('--learning_rate', type = float, default = LEARNING_RATE_DEFAULT,
+    parser.add_argument('--learning_rate', type=float, default=LEARNING_RATE_DEFAULT,
                         help='Learning rate')
-    parser.add_argument('--max_steps', type = int, default = MAX_STEPS_DEFAULT,
+    parser.add_argument('--max_steps', type=int, default=MAX_STEPS_DEFAULT,
                         help='Number of steps to run trainer.')
-    parser.add_argument('--batch_size', type = int, default = BATCH_SIZE_DEFAULT,
+    parser.add_argument('--batch_size', type=int, default=BATCH_SIZE_DEFAULT,
                         help='Batch size to run trainer.')
     parser.add_argument('--eval_freq', type=int, default=EVAL_FREQ_DEFAULT,
                         help='Frequency of evaluation on the test set')
-    parser.add_argument('--data_dir', type = str, default = DATA_DIR_DEFAULT,
+    parser.add_argument('--data_dir', type=str, default=DATA_DIR_DEFAULT,
                         help='Directory for storing input data')
     FLAGS, unparsed = parser.parse_known_args()
 

@@ -4,6 +4,7 @@ You should fill in code into indicated sections.
 """
 import numpy as np
 
+
 class LinearModule(object):
     """
     Linear module. Applies a linear transformation to the input data.
@@ -25,6 +26,7 @@ class LinearModule(object):
             'weight': np.zeros((out_features, in_features)),
             'bias': np.zeros((out_features, 1))
         }
+        self.x = None
 
     def forward(self, x):
         """
@@ -55,6 +57,7 @@ class LinearModule(object):
 
         return dx
 
+
 class ReLUModule(object):
     """
     ReLU activation module.
@@ -84,6 +87,7 @@ class ReLUModule(object):
         dx = np.multiply(self.grad, dout)
         return dx
 
+
 class SoftMaxModule(object):
     """
     Softmax activation module.
@@ -96,8 +100,8 @@ class SoftMaxModule(object):
         Returns:
           out: output of the module
         """
-        normed_x = np.exp(np.subtract(x, np.max(x, axis=1)[...,np.newaxis]))
-        self.out = np.divide(normed_x, normed_x.sum(axis=1)[...,np.newaxis])
+        normed_x = np.exp(np.subtract(x, np.max(x, axis=1)[..., np.newaxis]))
+        self.out = np.divide(normed_x, normed_x.sum(axis=1)[..., np.newaxis])
         return self.out
 
     def backward(self, dout):
@@ -109,16 +113,18 @@ class SoftMaxModule(object):
         Returns:
           dx: gradients with respect to the input of the module
         """
-        _dx = - self.out[:,:,None] * self.out[:,None,:]
+        _dx = - self.out[:, :, None] * self.out[:, None, :]
         _dx += np.apply_along_axis(np.diag, 1, self.out)
         dx = np.einsum('ij, ijk -> ik', dout, _dx)
         return dx
+
 
 class CrossEntropyModule(object):
     """
     Cross entropy loss module.
     """
     eps = 1e-10
+
     def forward(self, x, y):
         """
         Forward pass.
@@ -143,5 +149,5 @@ class CrossEntropyModule(object):
           dx: gradient of the loss with the respect to the input x.
         Implement backward pass of the module.
         """
-        dx = - np.divide(y,x+self.eps)/len(y)
+        dx = - np.divide(y, x+self.eps)/len(y)
         return dx

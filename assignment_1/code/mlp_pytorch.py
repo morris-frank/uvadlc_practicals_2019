@@ -8,6 +8,7 @@ from __future__ import print_function
 from torch import nn
 import torch.nn.functional as F
 
+
 class MLP(nn.Module):
     """
     This class implements a Multi-layer Perceptron in PyTorch.
@@ -33,11 +34,9 @@ class MLP(nn.Module):
         prev_nh = n_inputs
         self.hidden = nn.ModuleList()
         for nh in n_hidden:
-            self.hidden.append(nn.Linear(prev_nh,nh))
+            self.hidden.append(nn.Linear(prev_nh, nh))
             prev_nh = nh
         self.classifier = nn.Linear(prev_nh, n_classes)
-
-
 
     def forward(self, x):
         """
