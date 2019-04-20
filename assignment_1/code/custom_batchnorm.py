@@ -113,37 +113,32 @@ class CustomBatchNormManualFunction(torch.autograd.Function):
         """
 
         N, D = grad_output.shape
+        xμ, σ, invσ, xhat, γ = ctx.saved_tensors
 
+        grad_beta = None
         if ctx.needs_input_grad[2]:
             grad_beta = grad_output.sum(0)
-        else:
-            grad_beta = None
-
-        inputμ, σ, invσ, input_hat, gamma = ctx.saved_tensors
 
         grad_gamma = None
-        grad_input = None
-        if ctx.needs_input_grad[0] or ctx.needs_input_grad[1]:
-            grad_gamma_x = grad_output
-            grad_gamma = (grad_gamma_x*input_hat).sum(0)
+        if ctx.needs_input_grad[1]:
+            grad_gamma = (grad_output*xhat).sum(0)
 
+        grad_input = None
         if ctx.needs_input_grad[0]:
-            grad_xhat = grad_gamma_x * gamma
-            grad_ivar = (grad_xhat*inputμ).sum(0)
+            grad_xhat = grad_output * γ
+            grad_ivar = (grad_xhat*xμ).sum(0)
 
             grad_sqrt_var = -invσ**2 * grad_ivar
 
             grad_var = 0.5 * 1. / torch.sqrt(σ+ctx.eps) * grad_sqrt_var
 
             grad_sq = torch.ones(N,D, dtype=grad_var.dtype) * (1/N) * grad_var
-            grad_inputμ = grad_xhat * invσ + 2*inputμ*grad_sq
+            grad_inputμ = grad_xhat * invσ + 2*xμ*grad_sq
             grad_μ = -1 * grad_inputμ.sum(0)
 
             grad_x2 = torch.ones(N,D, dtype=grad_μ.dtype) * (1/N) * grad_μ
             grad_input = grad_inputμ + grad_x2
 
-        if not ctx.needs_input_grad[1]:
-            grad_gamma = None
         return grad_input, grad_gamma, grad_beta, None
 
 

@@ -49,8 +49,8 @@
 
 % unicode to latex
 \newcommand{\⇔}{\ensuremath{\Leftrightarrow}}
-\newcommand{\⇐}{\ensuremath{\Rightarrow}}
-\newcommand{\⇒}{\ensuremath{\Leftarrow}}
+\newcommand{\⇐}{\ensuremath{\Leftarrow}}
+\newcommand{\⇒}{\ensuremath{\Rightarrow}}
 
 \newcommand\f[2]{\ensuremath{\frac{#1}{#2}}}
 \newcommand\nf[2]{\ensuremath{\nicefrac{#1}{#2}}}
@@ -140,8 +140,7 @@
   &= \1^{d_l\t d_l}\\
   &\in\ℝ^{d_l\t d_l}
 \end{align*}
-
-Note the use of $\oslash$ for element-wise division, the use of $\delta$ for the Kronecker-Delta and the use of $\otimes$ for the Outer Product.
+\footnote{Note the use of $\oslash$ for element-wise division, the use of $\delta$ for the Kronecker-Delta and the use of $\otimes$ for the Outer Product.}
 
 \subsubsection{}
 \begin{align*}
@@ -169,20 +168,23 @@ Note the use of $\oslash$ for element-wise division, the use of $\delta$ for the
 \begin{align*}
   \tag{$\pf{L}{\B{W}^{(l)}}$}
   \pf{L}{\B{W}^{(l)}}
-  &= \pf{L}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{W}^{(l)}}\\
+  &= \pf{L}{\tilde{\B{x}}^{(l)}} \pf{\tilde{\B{x}}^{(l)}}{\B{W}^{(l)}}\\
+  &= \pf{L}{\tilde{\B{x}}^{(l)}} \bM{\vdots\\\pf{\tilde{\B{x}}^{(l)}_i}{\B{W}^{(l)}}\\\vdots}
 \end{align*}
 
 \begin{align*}
   \tag{$\pf{L}{\B{b}^{(l)}}$}
   \pf{L}{\B{b}^{(l)}}
   &= \pf{L}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{b}^{(l)}}\\
-  &= \pf{L}{\tilde{\B{x}}^{(l)}}\1^{d_l\t d_l}
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}\1^{d_l\t d_l}\\
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}
 \end{align*}
 
 \subsubsection{}
 If we use a batchsize $B>1$ we have to perform the same derivations as described above but over a new batch dimension.
 Meaning all matrices become tensor with the new first axis being of size $B$.
 As the batch items do not interfer with each other the results will be equivalent to doing the not batched dervivatives for each item alone.
+For the actual updates of the weights we gonna have a sum which can be build into the matrix computation.
 
 \subsection{NumPy MLP}
 The performance of the NumPy implementation of the MLP under differnt hyperparameter settings are show in Tabel~\ref{tab:numpy}.
@@ -238,5 +240,60 @@ Source code is in files \texttt{mlp\_pytorch.py} and \texttt{train\_mlp\_pytorch
   \caption{\textbf{Left} the loss and \textbf{right} the accuracy during training of the PyTorch MLP implementation.}
   \label{fig:pytorch_mlp}
 \end{figure}
+
+\section{Batch normalization}
+\subsection{Autograd}
+See the implementation in \texttt{custom\_batchnorm.py}: \texttt{CustomBatchNormAutograd}.
+
+\subsection{Manual gradient}
+\subsubsection{}
+\begin{align*}
+  \tag{$\pf{L}{\beta}$}
+  \pf{L}{\beta}
+  &= \pf{L}{y} \pf{y}{\beta}\\
+  &= \bM{\vdots\\ \sum_s\sum_i \pf{L}{y_i^s} \pf{y_i^s}{\beta_j}\\ \vdots}\\
+  &= \bM{\vdots\\ \sum_s\pf{L}{y_j^s} \\\vdots}\\
+  &= \sum_s\pf{L}{y^s}
+\end{align*}
+
+\begin{align*}
+  \tag{$\pf{L}{\gamma}$}
+  \pf{L}{\gamma}
+  &= \pf{L}{y} \pf{y}{\gamma}\\
+  &= \bM{\vdots\\ \sum_s\sum_i \pf{L}{y_i^s} \pf{y_i^s}{\gamma_j}\\\vdots}\\
+  &= \bM{\vdots\\ \sum_s\pf{L}{y_j^s} \hat{x}_j^s\\\vdots}\\
+  &= \sum_s \pf{L}{y^s}\odot\hat{x}^s
+\end{align*}
+\footnote{Note the use of $\odot$ for element-wise multiplication.}
+
+\begin{align*}
+  \tag{\pf{L}{x}}
+  \pf{L}{x} &= \pf{L}{(x-\mu)} + \pf{L}{\mu}\pf{\mu}{x}\\
+  &\text{with}\\
+  \pf{\mu}{x} &= \f{1}{B}\1^{B\t B}\\
+  \pf{L}{\mu} &= -\sum_s\left(\pf{L}{(x-\mu)}\right)_s\\
+  &\⇒\\
+  \pf{L}{x} &= \pf{L}{(x-\mu)} -\sum_s\left(\pf{L}{(x-\mu)}\right)_s\·\f{1}{B}\1^{B\t B}
+\end{align*}
+so missing is $\pf{L}{(x-\mu)}$: (We set $\hat{\sigma} = \sqrt{\sigma^2 + \epsilon}$ for simplicity.)
+
+\begin{align*}
+  \pf{L}{(x-\mu)} &= \pf{L}{y}\pf{y}{\hat{x}}\pf{\hat{x}}{(x-\mu)} + \pf{L}{y}\pf{y}{\hat{x}}\pf{\hat{x}}{\nf{1}{\hat{\sigma}}}\pf{\nf{1}{\hat{\sigma}}}{\hat{\sigma}}\pf{\hat{\sigma}}{\sigma}\pf{\sigma}{(x-\mu)}\\
+  &\text{with}\\
+  \pf{y}{\hat{x}} &= \gamma\\
+  \pf{\hat{x}}{(x-\mu)} &= \f{1}{\hat{\sigma}}\\
+  &\text{and with}\\
+  \pf{L}{\nf{1}{\hat{\sigma}}}
+  &= \pf{L}{y}\pf{y}{\hat{x}}\pf{\hat{x}}{\nf{1}{\hat{\sigma}}}\\
+  &= \sum_s \left(\pf{L}{\hat{x}}\right)_s\·(x_s-\mu_s)\\
+  \pf{\nf{1}{\hat{\sigma}}}{\hat{\sigma}} &= -\f{1}{\hat{\sigma}^2}\\
+  \pf{\hat{\sigma}}{\sigma} &= \f{1}{2\·\sqrt{\sigma+\epsilon}}\\
+  \pf{\sigma}{(x-\mu)} &= 2\·(x-\mu)\·\f{1}{B}\1^{B\t B}\\
+\end{align*}
+
+\subsubsection{}
+
+\subsubsection{}
+See the implementation in \texttt{custom\_batchnorm.py}: \texttt{CustomBatchNormManualModule}.
 
 \end{document}
