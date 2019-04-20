@@ -1,7 +1,6 @@
-
 #!/bin/bash
 
-#SBATCH --job-name=conv_pytorch_training
+#SBATCH --job-name=morris_conv_pytorch_training
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --ntasks-per-node=1

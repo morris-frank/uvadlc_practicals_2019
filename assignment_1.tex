@@ -148,14 +148,15 @@ Note the use of $\oslash$ for element-wise division, the use of $\delta$ for the
   \tag{$\pf{L}{\tilde{\B{x}}^{(N)}}$}
   \pf{L}{\tilde{\B{x}}^{(N)}}
   &= \pf{L}{\B{x}^{(N)}}\pf{\B{x}^{(N)}}{\tilde{\B{x}}^{(N)}}\\
-  &= \pf{L}{\B{x}^{(N)}}\·\bM{& \vdots &\\\hdots & \text{softmax}(\tilde{x}^{(N)}_j)\·(\delta_{ij} - \text{softmax}(\tilde{x}^{(N)}_i)) & \hdots\\ & \vdots &}
+  &= \pf{L}{\B{x}^{(N)}}\·\diag(\soft(\tilde{\B{x}}^{(N)})) -\soft(\tilde{\B{x}}^{(N)})\otimes \soft(\tilde{\B{x}}^{(N)})
 \end{align*}
 
 \begin{align*}
   \tag{$\pf{L}{\tilde{\B{x}}^{(l<N)}}$}
   \pf{L}{\tilde{\B{x}}^{(l<N)}}
   &= \pf{L}{\tilde{\B{x}}^{(l)}}\pf{\B{x}^{(l)}}{\tilde{\B{x}}^{(l)}}\\
-  &= \pf{L}{\tilde{\B{x}}^{(l)}}\·\B{x}^{(l)}\oslash\tilde{\B{x}}^{(l)}
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}\·\diag(\B{x}^{(l)}\oslash\tilde{\B{x}}^{(l)})\\
+  &= \bM{\ddots & &\\ & \pf{L}{\tilde{\B{x}}^{(l)}}\·\f{x^{(l)}_i}{\tilde{x}^{(l)}_i} &\\ & &\ddots}
 \end{align*}
 
 \begin{align*}
@@ -174,11 +175,14 @@ Note the use of $\oslash$ for element-wise division, the use of $\delta$ for the
 \begin{align*}
   \tag{$\pf{L}{\B{b}^{(l)}}$}
   \pf{L}{\B{b}^{(l)}}
-  &= \pf{L}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{b}^{(l)}}
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}\pf{\tilde{\B{x}}^{(l)}}{\B{b}^{(l)}}\\
+  &= \pf{L}{\tilde{\B{x}}^{(l)}}\1^{d_l\t d_l}
 \end{align*}
 
 \subsubsection{}
-If we use batchsize\…\…\…
+If we use a batchsize $B>1$ we have to perform the same derivations as described above but over a new batch dimension.
+Meaning all matrices become tensor with the new first axis being of size $B$.
+As the batch items do not interfer with each other the results will be equivalent to doing the not batched dervivatives for each item alone.
 
 \subsection{NumPy MLP}
 The performance of the NumPy implementation of the MLP under differnt hyperparameter settings are show in Tabel~\ref{tab:numpy}.
@@ -203,7 +207,7 @@ Source code is in files \texttt{mlp\_numpy.py}, \texttt{train\_mlp\_numpy.py} an
     \includegraphics[width=\linewidth]{assignment_1/code/np_loss.pdf} &
     \includegraphics[width=\linewidth]{assignment_1/code/np_accuracy.pdf}
   \end{tabularx}
-  \caption{\textbf{Left} the loss and \textbf{right} the accuracy during training of the NumPy MLP implementation.}
+  \caption{\textbf{Left} the loss and \textbf{right} the accuracy during training of the NumPy MLP implementation using the default hyperparameters.}
   \label{fig:numpy}
 \end{figure}
 
