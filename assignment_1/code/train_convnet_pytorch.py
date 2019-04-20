@@ -108,15 +108,15 @@ def train():
                 100 * accuracies['train'][-1], losses['train'][-1]))
 
     # Plotting
-    for d, n in [(accuracies, 'Accuracy'), (losses, 'Loss')]:
-        plt.figure()
-        plt.plot(eval_steps, d['train'], label='train')
-        plt.plot(eval_steps, d['test'], label='test')
-        plt.xlabel('Step')
-        plt.ylabel(n)
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig('conv_' + n.lower() + '.pdf')
+    # for d, n in [(accuracies, 'Accuracy'), (losses, 'Loss')]:
+    #     plt.figure()
+    #     plt.plot(eval_steps, d['train'], label='train')
+    #     plt.plot(eval_steps, d['test'], label='test')
+    #     plt.xlabel('Step')
+    #     plt.ylabel(n)
+    #     plt.legend()
+    #     plt.tight_layout()
+    #     plt.savefig('conv_' + n.lower() + '.pdf')
 
     print('Best testing loss: {:.2f} accuracy: {:.2f}'.format(np.min(losses['test']), 100*np.max(accuracies['test'])))
 
