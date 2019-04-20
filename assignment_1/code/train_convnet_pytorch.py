@@ -63,9 +63,7 @@ def train():
     n_classes = data['train'].labels.shape[1]
     n_test = data['test'].images.shape[0]
 
-    x_test, y_test = data['test'].next_batch(n_test)
-    x_test = torch.from_numpy(x_test).to(device)
-    y_test = torch.from_numpy(y_test.argmax(axis=1)).long().to(device)
+    data_test = data['test']
 
     net = ConvNet(3, n_classes).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -93,9 +91,17 @@ def train():
             losses['train'].append(loss)
             accuracies['train'].append(accuracy(out, y))
 
-            out = net.forward(x_test)
-            losses['test'].append(criterion(out, y_test))
-            accuracies['test'].append(accuracy(out, y_test))
+            test_losses = []
+            test_accuracies = []
+            for _ in range(0, n_test, FLAGS.batch_size):
+                x_test, y_test = data_test.next_batch(FLAGS.batch_size)
+                x_test = torch.from_numpy(x_test).to(device)
+                y_test = torch.from_numpy(y_test.argmax(axis=1)).long().to(device)
+                out = net.forward(x_test)
+                test_losses.append(criterion(out, y_test).item())
+                test_accuracies.append(accuracy(out, y_test))
+            losses['test'].append(np.mean(test_losses))
+            accuracies['test'].append(np.mean(test_accuracies))
 
             print('Iter {:04d}: Test: {:.2f} ({:f}), Train: {:.2f} ({:f})'.format(
                 s, 100 * accuracies['test'][-1], losses['test'][-1],
