@@ -25,6 +25,7 @@ OPTIMIZER_DEFAULT = 'ADAM'
 
 # Directory in which cifar data is saved
 DATA_DIR_DEFAULT = './cifar10/cifar-10-batches-py'
+OUTPUT_DIR = '/scratch/morris/'
 
 FLAGS = None
 
@@ -108,7 +109,7 @@ def train():
         plt.ylabel(n)
         plt.legend()
         plt.tight_layout()
-        plt.savefig('conv_' + n.lower() + '.pdf')
+        plt.savefig(OUTPUT_DIR + 'conv_' + n.lower() + '.pdf')
 
     print('Best testing loss: {:.2f} accuracy: {:.2f}'.format(np.min(losses['test']), 100*np.max(accuracies['test'])))
 
