@@ -110,7 +110,7 @@ def train():
         plt.ylabel(n)
         plt.legend()
         plt.tight_layout()
-        plt.savefig(OUTPUT_DIR + 'conv_' + n.lower() + '.pdf')
+        plt.savefig('conv_' + n.lower() + '.pdf')
 
     print('Best testing loss: {:.2f} accuracy: {:.2f}'.format(np.min(losses['test']), 100*np.max(accuracies['test'])))
 
@@ -128,12 +128,13 @@ def main():
     Main function
     """
     # Print all Flags to confirm parameter settings
+    open('torch.log', 'w').close()
+    sys.stdout = open('torch.log', 'w')
+
     print_flags()
 
     if not os.path.exists(FLAGS.data_dir):
         os.makedirs(FLAGS.data_dir)
-    sys.stdout = open(OUTPUT_DIR + 'torch.log', 'aw')
-
     # Run the training operation
     train()
 

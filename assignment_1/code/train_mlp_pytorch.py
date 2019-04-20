@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import optim, nn
 plt.style.use('fivethirtyeight')
+import sys
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '100'
@@ -135,6 +136,8 @@ def main():
     Main function
     """
     # Print all Flags to confirm parameter settings
+    open('torch.log', 'w').close()
+    sys.stdout = open('torch.log', 'a')
     print_flags()
 
     if not os.path.exists(FLAGS.data_dir):
