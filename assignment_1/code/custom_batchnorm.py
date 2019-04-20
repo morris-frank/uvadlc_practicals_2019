@@ -35,22 +35,21 @@ class CustomBatchNormAutograd(nn.Module):
         self.γ = nn.Parameter(torch.ones(n_neurons))
         self.n_neurons = n_neurons
 
-    def forward(self, inputs: torch.Tensor):
+    def forward(self, x: torch.Tensor):
         """
         Compute the batch normalization
 
         Args:
-          inputs: input tensor of shape (n_batch, n_neurons)
+          x: input tensor of shape (n_batch, n_neurons)
         Returns:
           out: batch-normalized tensor
         """
-        assert inputs.size(1) == self.n_neurons
-        μ = inputs.mean(0)
-        σ = torch.sqrt(inputs.var(0, unbiased=False) + self.ε)
-        x = (inputs - μ) / σ
-
-        out = self.γ * x + self.β
-        return out
+        assert x.size(1) == self.n_neurons
+        μ = x.mean(0)
+        σ = x.var(0, unbiased=False)
+        xhat = (x - μ) / torch.sqrt(σ + self.ε)
+        y = self.γ * xhat + self.β
+        return y
 
 
 ######################################################################################
@@ -72,31 +71,31 @@ class CustomBatchNormManualFunction(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, input, gamma, beta, eps=1e-5):
+    def forward(ctx, x, γ, β, ε=1e-5):
         """
         Compute the batch normalization
 
         Args:
           ctx: context object handling storing and retrival of tensors and constants and specifying
                whether tensors need gradients in backward pass
-          input: input tensor of shape (n_batch, n_neurons)
-          gamma: variance scaling tensor, applied per neuron, shpae (n_neurons)
-          beta: mean bias tensor, applied per neuron, shpae (n_neurons)
-          eps: small float added to the variance for stability
+          x: input tensor of shape (n_batch, n_neurons)
+          γ: variance scaling tensor, applied per neuron, shpae (n_neurons)
+          β: mean bias tensor, applied per neuron, shpae (n_neurons)
+          ε: small float added to the variance for stability
         Returns:
           out: batch-normalized tensor
         """
-        assert input.size(1) == gamma.size(0)
+        assert x.size(1) == γ.size(0)
 
-        μ = input.mean(0)
-        inputμ = input - μ
-        σ = input.var(0, unbiased=False)
-        invσ = torch.reciprocal(torch.sqrt(σ + eps))
-        input_hat = inputμ * invσ
-        out = gamma * input_hat + beta
+        μ = x.mean(0)
+        xμ = x - μ
+        σ = x.var(0, unbiased=False)
+        invσ = torch.reciprocal(torch.sqrt(σ + ε))
+        xhat = xμ * invσ
+        out = γ * xhat + β
 
-        ctx.save_for_backward(inputμ, σ, invσ, input_hat, gamma)
-        ctx.eps = eps
+        ctx.save_for_backward(xμ, σ, invσ, xhat, γ)
+        ctx.eps = ε
 
         return out
 
