@@ -15,6 +15,7 @@ import torch.nn as nn
 from convnet_pytorch import ConvNet
 import cifar10_utils
 import matplotlib.pyplot as plt
+import sys
 
 # Default constants
 LEARNING_RATE_DEFAULT = 1e-4
@@ -131,6 +132,7 @@ def main():
 
     if not os.path.exists(FLAGS.data_dir):
         os.makedirs(FLAGS.data_dir)
+    sys.stdout = open(OUTPUT_DIR + 'torch.log', 'aw')
 
     # Run the training operation
     train()
