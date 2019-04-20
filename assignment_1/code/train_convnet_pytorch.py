@@ -26,7 +26,7 @@ OPTIMIZER_DEFAULT = 'ADAM'
 
 # Directory in which cifar data is saved
 DATA_DIR_DEFAULT = './cifar10/cifar-10-batches-py'
-OUTPUT_DIR = '/scratch/morris/'
+OUTPUT_DIR = '~/'
 
 FLAGS = None
 
