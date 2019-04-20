@@ -45,8 +45,7 @@ def accuracy(predictions, targets):
       accuracy: scalar float, the accuracy of predictions,
                 i.e. the average correct predictions over the whole batch
     """
-    cpu_preds = predictions.cpu()
-    return np.mean((cpu_preds.detach().numpy().argmax(axis=1) == targets.numpy()))
+    return np.mean((predictions.cpu().detach().data.numpy().argmax(axis=1) == targets.numpy()))
 
 
 def train():
