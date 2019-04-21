@@ -26,6 +26,7 @@ EVAL_FREQ_DEFAULT = 100
 
 # Directory in which cifar data is saved
 DATA_DIR_DEFAULT = './cifar10/cifar-10-batches-py'
+OPTIMIZER = 'SGD'
 
 FLAGS = None
 
@@ -77,7 +78,10 @@ def train():
 
     net = MLP(n_inputs, dnn_hidden_units, n_classes)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=FLAGS.learning_rate, momentum=0.0)
+    if FLAGS.optimizer == 'SGD':
+        optimizer = optim.SGD(net.parameters(), lr=FLAGS.learning_rate, momentum=0.0)
+    else:
+        optimizer = optim.Adam(net.parameters(), lr=FLAGS.learning_rate, weight_decay=1e-2)
 
     losses = {'train': [], 'test': []}
     accuracies = {'train': [], 'test': []}
@@ -136,14 +140,14 @@ def main():
     Main function
     """
     # Print all Flags to confirm parameter settings
-    open('torch.log', 'w').close()
-    sys.stdout = open('torch.log', 'a')
+    open('mlp_torch.log', 'w').close()
     print_flags()
 
     if not os.path.exists(FLAGS.data_dir):
         os.makedirs(FLAGS.data_dir)
 
     # Run the training operation
+    #sys.stdout = open('mlp_torch.log', 'a', buffering=0)
     train()
 
 
@@ -162,6 +166,8 @@ if __name__ == '__main__':
                         help='Frequency of evaluation on the test set')
     parser.add_argument('--data_dir', type=str, default=DATA_DIR_DEFAULT,
                         help='Directory for storing input data')
+    parser.add_argument('--optimizer', type=str, default=OPTIMIZER,
+                        help='The optimizer to use')
     FLAGS, unparsed = parser.parse_known_args()
 
     main()

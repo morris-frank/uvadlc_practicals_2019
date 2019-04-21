@@ -215,30 +215,43 @@ Source code is in files \texttt{mlp\_numpy.py}, \texttt{train\_mlp\_numpy.py} an
 \end{figure}
 
 \section{PyTorch MLP}
+Source code is in files \texttt{mlp\_pytorch.py} and \texttt{train\_mlp\_pytorch.py}.
 The performance of the PyTorch MLP model under diffent settings are shown in Table~\ref{tab:pytorch_mlp}.
 The loss and accuracy curves during training of the best performing model are shown in Figure~\ref{fig:pytorch_mlp}.
-Source code is in files \texttt{mlp\_pytorch.py} and \texttt{train\_mlp\_pytorch.py}.
+We experiment with different hyperparameter settings. We change the number of hidden neurons and the number of hidden layers.
+We set different learning rates.
+We use SGD and Adam.
+SGD is stochastic Gradient descent with variable learning rate but we fix momentum to zero.
+Alternatively we use the Adam optimizer and add regularization in the form of weight decay with a factor of $1E-2$.
+The best result is achieved using Adam and three layers of decreasing size.
+Generally Adam more robustly optimizes under differnt settings.
+As these results  are not averages over multiple runs we see a lot of variability.
+For example the single layer network with only ten nodes achieves higher accuracy than using three-hundred nodes with SGD.
 
 \begin{table}
   \centering
   \begin{tabular}{ccccc}
-    Layers & LR & Batch size & Test Accuracy & Test Loss\\\toprule
-    100 & 2e-3 & 200 & 45.58 & 1.61\\
-    10 & 2e-3 & 200 & 39.52 & 1.70\\
-    200 & 1e-3 & 200 & \textbf{48.14} & \textbf{1.53}\\
-    80,50 & 1e-5 & 200 & 31.08 & 2.26\\
-    300 & 1e-5 & 200 & 33.27 & 4.25\\
+    Layers & Optimizer & LR & Test Accuracy & Test Loss\\\toprule
+    100         & SGD  & 2e-3 & 45.58 & 1.61\\
+    10          & SGD  & 2e-3 & 39.52 & 1.70\\
+    200         & SGD  & 1e-3 & 49.11 & 1.52\\
+    80,50       & SGD  & 1e-5 & 31.08 & 2.26\\
+    500,300     & SGD  & 1e-3 & 48.72 & 1.58 \\
+    300         & SGD  & 1e-5 & 33.27 & 4.25\\
+    300         & Adam & 1e-3 & 48.46 & 1.63\\
+    500,300     & Adam & 1e-3 & 47.66 & 1.49\\
+    600,300,100 & Adam & 1e-4 & \textbf{53.55} & \textbf{1.43}\\
   \end{tabular}
-  \caption{Results of the PyTorch MLP using differnt settings for the hyperparameters.}
+  \caption{Results of the PyTorch MLP using differnt settings for the hyperparameters. SGD is stochastic gradient descent withtout momentum.}
   \label{tab:pytorch_mlp}
 \end{table}
 
 \begin{figure}
   \begin{tabularx}{\linewidth}{XX}
-    \includegraphics[width=\linewidth]{assignment_1/code/torch_loss.pdf} &
-    \includegraphics[width=\linewidth]{assignment_1/code/torch_accuracy.pdf}
+    \includegraphics[width=\linewidth]{assignment_1/code/torch_loss_save.pdf} &
+    \includegraphics[width=\linewidth]{assignment_1/code/torch_accuracy_save.pdf}
   \end{tabularx}
-  \caption{\textbf{Left} the loss and \textbf{right} the accuracy during training of the PyTorch MLP implementation.}
+  \caption{\textbf{Left} the loss and \textbf{right} the accuracy during training of the best performing PyTorch MLP implementation. (Single layer 200 neurons)}
   \label{fig:pytorch_mlp}
 \end{figure}
 
@@ -249,15 +262,6 @@ See the implementation in \texttt{custom\_batchnorm.py}: \texttt{CustomBatchNorm
 \subsection{Manual gradient}
 \subsubsection{}
 \begin{align*}
-  \tag{$\pf{L}{\beta}$}
-  \pf{L}{\beta}
-  &= \pf{L}{y} \pf{y}{\beta}\\
-  &= \bM{\vdots\\ \sum_s\sum_i \pf{L}{y_i^s} \pf{y_i^s}{\beta_j}\\ \vdots}\\
-  &= \bM{\vdots\\ \sum_s\pf{L}{y_j^s} \\\vdots}\\
-  &= \sum_s\pf{L}{y^s}
-\end{align*}
-
-\begin{align*}
   \tag{$\pf{L}{\gamma}$}
   \pf{L}{\gamma}
   &= \pf{L}{y} \pf{y}{\gamma}\\
@@ -266,6 +270,15 @@ See the implementation in \texttt{custom\_batchnorm.py}: \texttt{CustomBatchNorm
   &= \sum_s \pf{L}{y^s}\odot\hat{x}^s
 \end{align*}
 \footnote{Note the use of $\odot$ for element-wise multiplication.}
+
+\begin{align*}
+  \tag{$\pf{L}{\beta}$}
+  \pf{L}{\beta}
+  &= \pf{L}{y} \pf{y}{\beta}\\
+  &= \bM{\vdots\\ \sum_s\sum_i \pf{L}{y_i^s} \pf{y_i^s}{\beta_j}\\ \vdots}\\
+  &= \bM{\vdots\\ \sum_s\pf{L}{y_j^s} \\\vdots}\\
+  &= \sum_s\pf{L}{y^s}
+\end{align*}
 
 \begin{align*}
   \tag{\pf{L}{x}}
@@ -293,8 +306,25 @@ so missing is $\pf{L}{(x-\mu)}$: (We set $\hat{\sigma} = \sqrt{\sigma^2 + \epsil
 \end{align*}
 
 \subsubsection{}
+See implementation of the manual backward pass in \texttt{custom\_batchnorm.py}: \texttt{CustomBatchNormManualFunction}.
+We use the functions context to save the five tensors $x-\mu$, $\sigma^2$, $\f{1}{\sqrt{\sigma^2 +\epsilon}}$, $\f{x-\mu}{\sqrt{\sigma^2 +\epsilon}}$ and $\gamma$.
+In that we make a conscious decisions to trade time performance for more memory usage.
 
 \subsubsection{}
 See the implementation in \texttt{custom\_batchnorm.py}: \texttt{CustomBatchNormManualModule}.
+
+\section{PyTorch CNN}
+See the implementation in \texttt{convnet\_pytorch.py} and  \texttt{train\_convnet\_pytorch.py}.
+Curves for loss and accuracy during training are shown in Figure~\ref{fig:pytorch_conv}.
+Using the default parameters and  the Adam optimizer we reach a maximum of 77.08\% accuracy on the test set.
+
+\begin{figure}
+  \begin{tabularx}{\linewidth}{XX}
+    \includegraphics[width=\linewidth]{assignment_1/code/conv_loss.pdf} &
+    \includegraphics[width=\linewidth]{assignment_1/code/conv_accuracy.pdf}
+  \end{tabularx}
+  \caption{\textbf{Left} the loss and \textbf{right} the accuracy during training of the PyTorch CNN implementation.}
+  \label{fig:pytorch_conv}
+\end{figure}
 
 \end{document}
