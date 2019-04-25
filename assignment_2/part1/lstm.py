@@ -23,12 +23,38 @@ import torch.nn as nn
 
 ################################################################################
 
+
 class LSTM(nn.Module):
 
     def __init__(self, seq_length, input_dim, num_hidden, num_classes, batch_size, device='cpu'):
         super(LSTM, self).__init__()
-        # Initialization here ...
+        self.batch_size, self.seq_length, self.input_dim, self.num_hidden = batch_size, seq_length, input_dim, num_hidden
+
+        # Building weights and biases
+        self.W, self.b, self.activation, self.gate = nn.ParameterDict(), nn.ParameterDict(), {}, {}
+        for i in ['g', 'i', 'f', 'o']:
+            self.W[i + 'x'] = nn.Parameter(torch.zeros(input_dim, num_hidden))
+            self.W[i + 'h'] = nn.Parameter(torch.zeros(num_hidden, num_hidden))
+            self.b[i] = nn.Parameter(torch.zeros(num_hidden))
+            self.activation[i] = nn.Sigmoid()
+        self.W['ph'] = nn.Parameter(torch.zeros(num_hidden, num_classes))
+        self.b['p'] = nn.Parameter(torch.zeros(num_classes))
+        self.activation['g'] = nn.Tanh()
+
+        # Initalize weights
+        for l in self.W.values():
+            nn.init.kaiming_normal_(l)
+
+        self.device = device
+        self.to(device)
 
     def forward(self, x):
-        # Implementation here ...
-        pass
+        assert x.shape == (self.batch_size, self.seq_length, self.input_dim)
+        h = torch.zeros(self.batch_size, self.num_hidden, device=self.device)
+        c = torch.zeros(self.batch_size, self.num_hidden, device=self.device)
+        for s in range(self.seq_length):
+            for i in ['g', 'i', 'f', 'o']:
+                self.gate[i] = self.activation[i](x[:, s, :] @ self.W[i + 'x'] + h @ self.W[i + 'h'] + self.b[i])
+            c = self.gate['g'] * self.gate['i'] + c * self.gate['f']
+            h = torch.tanh(c) * self.gate['o']
+        return h @ self.W['ph'] + self.b['p']

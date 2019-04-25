@@ -42,7 +42,7 @@ class VanillaRNN(nn.Module):
         self.to(device)
 
     def forward(self, x):
-        assert(x.shape == self.dim)
+        assert x.shape == self.dim
         h = torch.zeros(self.dim[0], self.Whh.shape[0], device=self.device)
         for s in range(self.dim[1]):
             h = self.activation(x[:, s, :] @ self.Whx + h @ self.Whh + self.bh)

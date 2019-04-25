@@ -49,7 +49,8 @@ def train(config):
         model = VanillaRNN(config.input_length, config.input_dim, config.num_hidden,
                            config.num_classes, config.batch_size, device)
     else:
-        model = LSTM()
+        model = LSTM(config.input_length, config.input_dim, config.num_hidden,
+                     config.num_classes, config.batch_size, device)
 
     # Initialize the dataset and data loader (note the +1)
     dataset = PalindromeDataset(config.input_length+1)
