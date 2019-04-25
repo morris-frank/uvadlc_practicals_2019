@@ -23,12 +23,27 @@ import torch.nn as nn
 
 ################################################################################
 
+
 class VanillaRNN(nn.Module):
 
     def __init__(self, seq_length, input_dim, num_hidden, num_classes, batch_size, device='cpu'):
         super(VanillaRNN, self).__init__()
-        # Initialization here ...
+        self.dim = (batch_size, seq_length, input_dim)
+        self.Whx = nn.Parameter(torch.zeros(input_dim, num_hidden))
+        self.Whh = nn.Parameter(torch.zeros(num_hidden, num_hidden))
+        self.Wph = nn.Parameter(torch.zeros(num_hidden, num_classes))
+        for l in [self.Whx, self.Whh, self.Wph]:
+            nn.init.kaiming_normal_(l)
+        self.bh = nn.Parameter(torch.zeros(num_hidden))
+        self.bp = nn.Parameter(torch.zeros(num_classes))
+        # h is not a parameter!
+        self.activation = nn.Tanh()
+        self.device = device
+        self.to(device)
 
     def forward(self, x):
-        # Implementation here ...
-        pass
+        assert(x.shape == self.dim)
+        h = torch.zeros(self.dim[0], self.Whh.shape[0], device=self.device)
+        for s in range(self.dim[1]):
+            h = self.activation(x[:, s, :] @ self.Whx + h @ self.Whh + self.bh)
+        return h @ self.Wph + self.bp
