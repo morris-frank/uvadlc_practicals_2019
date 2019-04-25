@@ -19,34 +19,45 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import pickle
 import time
 from datetime import datetime
-import numpy as np
 from itertools import product
-import pickle
-from tqdm import tqdm
+import os.path
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from dataset import PalindromeDataset
-from vanilla_rnn import VanillaRNN
 from lstm import LSTM
+from vanilla_rnn import VanillaRNN
 
 
-def experiment(config):
-    lengths = range(5, config.input_length)
-    results = {'RNN': {}, 'LSTM': {}}
+RES_FILE = 'palindrome.obj'
+
+
+def experiment(config, repeat=10):
     config.quite = True
-    for model, length in product(results.keys(), lengths):
-        print('{} with lenght {}'.format(model, length))
-        config.model_type, config.input_length = model, length
-        results[model][length] = train(config)
-    with open('palindrome.obj', 'wb') as fp:
-        pickle.dump(results, fp)
-    plot()
+    if os.path.exists(RES_FILE):
+        with open(RES_FILE, 'rb') as fp:
+            results = pickle.load(RES_FILE)
+    else:
+        results = {'RNN': {}, 'LSTM': {}}
+    lengths = range(5, config.input_length)
+    for _ in range(repeat):
+        for model, length in product(results.keys(), lengths):
+            print('{} with lenght {}'.format(model, length))
+            config.model_type, config.input_length = model, length
+            results[model].setdefault(length, ([], []))
+            accs, loss = train(config)
+            results[model][length][0].append(accs)
+            results[model][length][1].append(loss)
+        with open(RES_FILE, 'wb') as fp:
+            pickle.dump(results, fp)
 
 
 def train(config):
