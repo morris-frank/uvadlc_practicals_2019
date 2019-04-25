@@ -22,6 +22,9 @@ import argparse
 import time
 from datetime import datetime
 import numpy as np
+from itertools import product
+import pickle
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -32,14 +35,25 @@ from dataset import PalindromeDataset
 from vanilla_rnn import VanillaRNN
 from lstm import LSTM
 
-# You may want to look into tensorboardX for logging
-# from tensorboardX import SummaryWriter
 
-################################################################################
+def experiment(config):
+    lengths = range(5, config.input_length)
+    results = {'RNN': {}, 'LSTM': {}}
+    config.quite = True
+    for model, length in product(results.keys(), lengths):
+        print('{} with lenght {}'.format(model, length))
+        config.model_type, config.input_length = model, length
+        results[model][length] = train(config)
+    with open('palindrome.obj', 'wb') as fp:
+        pickle.dump(results, fp)
+    plot()
+
 
 def train(config):
 
     assert config.model_type in ('RNN', 'LSTM')
+
+    tol = 0.
 
     # Initialize the device which to run the model on
     device = torch.device(config.device)
@@ -59,9 +73,11 @@ def train(config):
     # Setup the loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.RMSprop(model.parameters(), lr=config.learning_rate)
+    accuracies = [0, 1]
+    losses = [0, 1]
 
+    bar = tqdm(total=config.train_steps)
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
-
         # Only for time measurement of step through network
         t1 = time.time()
 
@@ -83,32 +99,34 @@ def train(config):
         optimizer.step()
 
         # Add more code here ...
-        loss = loss.item()
         accuracy = (out.argmax(dim=1) == batch_targets.long()).sum().float() / float(batch_targets.shape[0])
+        losses.append(loss.item())
+        accuracies.append(accuracy.item())
 
         # Just for time measurement
         t2 = time.time()
         examples_per_second = config.batch_size/float(t2-t1)
 
-        if step % 10 == 0:
-
+        if step % 10 == 0 and not config.quite:
             print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
                   "Accuracy = {:.2f}, Loss = {:.3f}".format(
                     datetime.now().strftime("%Y-%m-%d %H:%M"), step,
                     config.train_steps, config.batch_size, examples_per_second,
-                    accuracy, loss
+                    accuracies[-1], losses[-1]
             ))
 
-        if step == config.train_steps:
+        bar.update()
+        if step == config.train_steps or np.isclose(losses[-1], losses[-2], tol):
             # If you receive a PyTorch data-loader error, check this bug report:
             # https://github.com/pytorch/pytorch/pull/9655
             break
-
     print('Done training.')
+    return accuracies[2:], losses[2:]
 
 
- ################################################################################
- ################################################################################
+################################################################################
+################################################################################
+
 
 if __name__ == "__main__":
 
@@ -126,8 +144,12 @@ if __name__ == "__main__":
     parser.add_argument('--train_steps', type=int, default=10000, help='Number of training steps')
     parser.add_argument('--max_norm', type=float, default=10.0)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
-
+    parser.add_argument('--run', action='store_true')
+    parser.add_argument('--quite', action='store_false')
     config = parser.parse_args()
 
     # Train the model
-    train(config)
+    if config.run:
+        experiment(config)
+    else:
+        train(config)
