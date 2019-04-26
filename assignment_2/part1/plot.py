@@ -6,7 +6,7 @@ import pickle
 plt.style.use('ggplot')
 
 
-def smooth(x, win=18):
+def smooth(x, win=5):
     k = np.ones(win, 'd')/win
     s = np.r_[x[win-1:0:-1], x, x[-2:-win-1:-1]]
     return np.convolve(k, s, mode='valid')[:len(x)]
@@ -23,23 +23,24 @@ def create_padded_array(llist):
 
 def plot():
     xlim = 1500
+    co = 2
     with open('palindrome.obj', 'rb') as fp:
         results = pickle.load(fp)
 
-    cms = {'RNN': cm.get_cmap('Blues', len(results['RNN'])),
-           'LSTM': cm.get_cmap('Oranges', len(results['LSTM']))}
+    cms = {'RNN': cm.get_cmap('Greens', len(results['RNN'])+co),
+           'LSTM': cm.get_cmap('Oranges', len(results['LSTM'])+co)}
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6))
     for model, cmap in cms.items():
         for idx, (length, (accs, losss)) in enumerate(results[model].items()):
             acc = create_padded_array(accs).mean(axis=0)[:xlim]
             loss = create_padded_array(losss).mean(axis=0)[:xlim]
-            aline, = ax1.plot(range(len(acc)), smooth(acc), color=cmap(idx), alpha=0.9)
-            lline, = ax2.plot(range(len(loss)), smooth(loss), color=cmap(idx), alpha=0.9)
+            aline, = ax1.plot(range(len(acc)), smooth(acc), color=cmap(idx+co), alpha=0.9)
+            lline, = ax2.plot(range(len(loss)), smooth(loss), color=cmap(idx+co), alpha=0.9)
         for line in [aline, lline]:
             line.set_label(model)
     ax1.set_ylabel('Accuracy')
     ax2.set_ylabel('Loss')
-    ax2.set_ylim(0, 3)
+    ax2.set_ylim(0, 2.5)
     for ax in [ax1, ax2]:
         ax.set_xlabel('training steps')
         ax.set_xlim(0, xlim)
