@@ -28,10 +28,12 @@ class LSTM(nn.Module):
 
     def __init__(self, seq_length, input_dim, num_hidden, num_classes, batch_size, device='cpu'):
         super(LSTM, self).__init__()
-        self.batch_size, self.seq_length, self.input_dim, self.num_hidden = batch_size, seq_length, input_dim, num_hidden
+        self.batch_size, self.seq_length = batch_size, seq_length
+        self.input_dim, self.num_hidden = input_dim, num_hidden
 
         # Building weights and biases
-        self.W, self.b, self.activation, self.gate = nn.ParameterDict(), nn.ParameterDict(), {}, {}
+        self.W, self.b = nn.ParameterDict(), nn.ParameterDict()
+        self.activation, self.gate = {}, {}
         for i in ['g', 'i', 'f', 'o']:
             self.W[i + 'x'] = nn.Parameter(torch.zeros(input_dim, num_hidden))
             self.W[i + 'h'] = nn.Parameter(torch.zeros(num_hidden, num_hidden))

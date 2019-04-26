@@ -26,12 +26,14 @@ import numpy as np
 
 import torch
 import torch.optim as optim
+import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from part2.dataset import TextDataset
-from part2.model import TextGenerationModel
+from dataset import TextDataset
+from model import TextGenerationModel
 
 ################################################################################
+
 
 def train(config):
 
@@ -39,27 +41,37 @@ def train(config):
     device = torch.device(config.device)
 
     # Initialize the model that we are going to use
-    model = TextGenerationModel( ... )  # fixme
 
-    # Initialize the dataset and data loader (note the +1)
-    dataset = TextDataset( ... )  # fixme
+    dataset = TextDataset(config.txt_file, config.seq_length)
+
+    model = TextGenerationModel(config.batch_size, config.seq_length, dataset.vocab_size,
+                                config.lstm_num_hidden, config.lstm_num_layers,
+                                config.device, 1. - config.dropout_keep_prob)
+
     data_loader = DataLoader(dataset, config.batch_size, num_workers=1)
 
     # Setup the loss and optimizer
-    criterion = None  # fixme
-    optimizer = None  # fixme
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
+    lr_scheduleer = optim.lr_scheduler.StepLR(
+        optimizer, step_size=config.learning_rate_step, gamma=1.-config.learning_rate_decay)
 
+    device_inputs = torch.zeros(config.batch_size, config.seq_length - 1, device=device, dtype=torch.long)
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
         # Only for time measurement of step through network
         t1 = time.time()
 
-        #######################################################
-        # Add more code here ...
-        #######################################################
+        torch.stack(batch_inputs, dim=1, out=device_inputs)
+
+        out = model.forward(device_inputs)
+        breakpoint()
+        loss = criterion.forward(out, batch_targets)
 
         loss = np.inf   # fixme
         accuracy = 0.0  # fixme
+
+        lr_scheduleer.step()
 
         # Just for time measurement
         t2 = time.time()
@@ -85,9 +97,9 @@ def train(config):
 
     print('Done training.')
 
+################################################################################
+################################################################################
 
- ################################################################################
- ################################################################################
 
 if __name__ == "__main__":
 
@@ -116,6 +128,7 @@ if __name__ == "__main__":
     parser.add_argument('--summary_path', type=str, default="./summaries/", help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=5, help='How often to print training progress')
     parser.add_argument('--sample_every', type=int, default=100, help='How often to sample from the model')
+    parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()
 
