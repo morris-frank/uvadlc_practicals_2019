@@ -27,15 +27,15 @@ def plot():
     with open('palindrome.obj', 'rb') as fp:
         results = pickle.load(fp)
 
-    cms = {'RNN': cm.get_cmap('Greens', len(results['RNN'])+co),
-           'LSTM': cm.get_cmap('Oranges', len(results['LSTM'])+co)}
+    cms = {'LSTM': ('-', cm.get_cmap('Oranges', len(results['LSTM'])+co)),
+           'RNN': ('-', cm.get_cmap('Greens', len(results['RNN'])+co))}
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6))
-    for model, cmap in cms.items():
+    for model, (lstyle, cmap) in cms.items():
         for idx, (length, (accs, losss)) in enumerate(results[model].items()):
             acc = create_padded_array(accs).mean(axis=0)[:xlim]
             loss = create_padded_array(losss).mean(axis=0)[:xlim]
-            aline, = ax1.plot(range(len(acc)), smooth(acc), color=cmap(idx+co), alpha=0.9)
-            lline, = ax2.plot(range(len(loss)), smooth(loss), color=cmap(idx+co), alpha=0.9)
+            aline, = ax1.plot(range(len(acc)), smooth(acc), lstyle, color=cmap(idx+co), alpha=0.9)
+            lline, = ax2.plot(range(len(loss)), smooth(loss), lstyle, color=cmap(idx+co), alpha=0.9)
         for line in [aline, lline]:
             line.set_label(model)
     ax1.set_ylabel('Accuracy')
