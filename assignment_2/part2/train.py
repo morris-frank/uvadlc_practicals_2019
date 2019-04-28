@@ -91,14 +91,14 @@ def train(config):
             device_targets = torch.stack(batch_targets, dim=1).to(device)
 
             out, _ = model.forward(device_inputs)
-
+            optimizer.zero_grad()
+            
             out.transpose_(1, 2)  # Make it BS × Dictionary × Seq length
             loss = criterion.forward(out, device_targets)
             losses.append(loss.item())
             accuracy = (out.argmax(dim=1) == device_targets).float().mean()
             accuracies.append(accuracy)
 
-            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             lr_scheduler.step()
