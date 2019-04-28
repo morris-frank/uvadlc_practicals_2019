@@ -80,9 +80,6 @@ def train(config):
     accuracies = [0, 1]
     losses = [0, 1]
 
-    device_inputs = torch.zeros(config.seq_length - 1, config.batch_size, device=device, dtype=torch.long)
-    device_targets = torch.zeros(config.batch_size, config.seq_length - 1, device=device, dtype=torch.long)
-
     step = 0
     while step < config.train_steps:
         for _, (batch_inputs, batch_targets) in enumerate(data_loader):
@@ -90,8 +87,8 @@ def train(config):
             # Only for time measurement of step through network
             t1 = time.time()
 
-            torch.stack(batch_inputs, dim=0, out=device_inputs)
-            torch.stack(batch_targets, dim=1, out=device_targets)
+            device_inputs = torch.stack(batch_inputs, dim=0).to(device)
+            device_targets = torch.stack(batch_targets, dim=1).to(device)
 
             out, _ = model.forward(device_inputs)
 
