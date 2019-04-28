@@ -38,7 +38,6 @@ class TextGenerationModel(nn.Module):
         # assert x.shape == (self.seq_length, self.batch_size)
         embedding = self.embed(x)
         hidden_states, (h, c) = self.lstm(embedding, h_and_c)
-        hidden_states.transpose_(0, 1)
         return self.projection(hidden_states), (h, c)
 
 

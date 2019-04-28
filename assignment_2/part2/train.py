@@ -50,7 +50,7 @@ def seq_sampling(model, dataset, seq_length, sampler=temperature_sampling, temp=
     h_and_c = None
     for i in range(1, seq_length):
         out, h_and_c = model.forward(ramblings, h_and_c)
-        ramblings[0, i] = sampler(out[i, ...].squeeze(), temp)
+        ramblings[0, i] = sampler(out[0,i, ...].squeeze(), temp)
     text = dataset.convert_to_string(ramblings.numpy().squeeze())
     log = "{};{};{};{}\n".format(time.time(), sampler.__name__, temp, text)
     print(log)
@@ -91,11 +91,11 @@ def train(config):
             device_targets = torch.stack(batch_targets, dim=1).to(device)
 
             out, _ = model.forward(device_inputs)
+            outt = out.transpose(0, 1).transpose(1, 2)
             optimizer.zero_grad()
-
-            loss = criterion.forward(out.transpose(1, 2), device_targets)
+            loss = criterion.forward(outt, device_targets)
             losses.append(loss.item())
-            accuracy = (out.argmax(dim=1) == device_targets).float().mean()
+            accuracy = (outt.argmax(dim=1) == device_targets).float().mean()
             accuracies.append(accuracy)
 
             loss.backward()
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     # Misc params
     parser.add_argument('--summary_path', type=str, default="./summaries/", help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=5, help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=500, help='How often to sample from the model')
+    parser.add_argument('--sample_every', type=int, default=20, help='How often to sample from the model')
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()
