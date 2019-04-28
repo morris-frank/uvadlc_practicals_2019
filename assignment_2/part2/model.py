@@ -34,10 +34,11 @@ class TextGenerationModel(nn.Module):
         self.projection = nn.Linear(lstm_num_hidden, vocabulary_size)
         self.to(device)
 
-    def forward(self, x):
-        assert x.shape == (self.batch_size, self.seq_length)
+    def forward(self, x, h_and_c=None):
+        # assert x.shape == (self.seq_length, self.batch_size)
         embedding = self.embed(x)
-        hidden_states, _ = self.lstm(embedding)
-        return self.projection(hidden_states[:, -1, :])
+        hidden_states, (h, c) = self.lstm(embedding, h_and_c)
+        hidden_states.transpose_(0, 1)
+        return self.projection(hidden_states), (h, c)
 
 

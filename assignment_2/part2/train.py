@@ -35,6 +35,28 @@ from model import TextGenerationModel
 ################################################################################
 
 
+def greedy_sampling(out, temp):
+    return out.argmax()
+
+
+def temperature_sampling(out, temp):
+    dist = torch.softmax(out/temp, dim=0)
+    return torch.multinomial(dist, 1).item()
+
+
+def seq_sampling(model, dataset, seq_length, sampler=temperature_sampling, temp=None):
+    ramblings = torch.randint(dataset.vocab_size, (1, seq_length))
+
+    h_and_c = None
+    for i in range(1, seq_length):
+        out, h_and_c = model.forward(ramblings, h_and_c)
+        ramblings[0, i] = sampler(out[i, ...].squeeze(), temp)
+    text = dataset.convert_to_string(ramblings.numpy().squeeze())
+    log = "{};{};{};{}\n".format(time.time(), sampler.__name__, temp, text)
+    print(log)
+    return log
+
+
 def train(config):
 
     # Initialize the device which to run the model on
@@ -53,47 +75,63 @@ def train(config):
     # Setup the loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
-    lr_scheduleer = optim.lr_scheduler.StepLR(
+    lr_scheduler = optim.lr_scheduler.StepLR(
         optimizer, step_size=config.learning_rate_step, gamma=1.-config.learning_rate_decay)
+    accuracies = [0, 1]
+    losses = [0, 1]
 
-    device_inputs = torch.zeros(config.batch_size, config.seq_length - 1, device=device, dtype=torch.long)
-    for step, (batch_inputs, batch_targets) in enumerate(data_loader):
+    device_inputs = torch.zeros(config.seq_length - 1, config.batch_size, device=device, dtype=torch.long)
+    device_targets = torch.zeros(config.batch_size, config.seq_length - 1, device=device, dtype=torch.long)
 
-        # Only for time measurement of step through network
-        t1 = time.time()
+    step = 0
+    while step < config.train_steps:
+        for _, (batch_inputs, batch_targets) in enumerate(data_loader):
+            step += 1
+            # Only for time measurement of step through network
+            t1 = time.time()
 
-        torch.stack(batch_inputs, dim=1, out=device_inputs)
+            torch.stack(batch_inputs, dim=0, out=device_inputs)
+            torch.stack(batch_targets, dim=1, out=device_targets)
 
-        out = model.forward(device_inputs)
-        breakpoint()
-        loss = criterion.forward(out, batch_targets)
+            out, _ = model.forward(device_inputs)
 
-        loss = np.inf   # fixme
-        accuracy = 0.0  # fixme
+            out.transpose_(1, 2)  # Make it BS × Dictionary × Seq length
+            loss = criterion.forward(out, device_targets)
+            losses.append(loss.item())
+            accuracy = (out.argmax(dim=1) == device_targets).float().mean()
+            accuracies.append(accuracy)
 
-        lr_scheduleer.step()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            lr_scheduler.step()
 
-        # Just for time measurement
-        t2 = time.time()
-        examples_per_second = config.batch_size/float(t2-t1)
+            # Just for time measurement
+            t2 = time.time()
+            examples_per_second = config.batch_size/float(t2-t1)
 
-        if step % config.print_every == 0:
+            if step % config.print_every == 0:
+                print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
+                      "Accuracy = {:.2f}, Loss = {:.3f}, LR = {}".format(
+                        datetime.now().strftime("%Y-%m-%d %H:%M"), step,
+                        int(config.train_steps), config.batch_size, examples_per_second,
+                        accuracies[-1], losses[-1], optimizer.param_groups[-1]['lr']
+                ))
 
-            print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
-                  "Accuracy = {:.2f}, Loss = {:.3f}".format(
-                    datetime.now().strftime("%Y-%m-%d %H:%M"), step,
-                    config.train_steps, config.batch_size, examples_per_second,
-                    accuracy, loss
-            ))
+            if step % config.sample_every == 0:
+                torch.save(model, config.txt_file + '.model')
+                log = []
+                with torch.no_grad():
+                    log.append(seq_sampling(model, dataset, config.seq_length, greedy_sampling))
+                    for T in [0.5, 1.0, 2.0]:
+                        log.append(seq_sampling(model, dataset, config.seq_length, temperature_sampling, temp=T))
+                with open(config.txt_file + '.generated', 'a') as fp:
+                    fp.writelines(log)
 
-        if step == config.sample_every:
-            # Generate some sentences by sampling from the model
-            pass
-
-        if step == config.train_steps:
-            # If you receive a PyTorch data-loader error, check this bug report:
-            # https://github.com/pytorch/pytorch/pull/9655
-            break
+            if step == config.train_steps:
+                # If you receive a PyTorch data-loader error, check this bug report:
+                # https://github.com/pytorch/pytorch/pull/9655
+                break
 
     print('Done training.')
 
@@ -127,7 +165,7 @@ if __name__ == "__main__":
     # Misc params
     parser.add_argument('--summary_path', type=str, default="./summaries/", help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=5, help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=100, help='How often to sample from the model')
+    parser.add_argument('--sample_every', type=int, default=500, help='How often to sample from the model')
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()
