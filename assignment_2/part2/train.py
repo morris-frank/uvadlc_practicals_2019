@@ -92,9 +92,8 @@ def train(config):
 
             out, _ = model.forward(device_inputs)
             optimizer.zero_grad()
-            
-            out.transpose_(1, 2)  # Make it BS × Dictionary × Seq length
-            loss = criterion.forward(out, device_targets)
+
+            loss = criterion.forward(out.transpose(1, 2), device_targets)
             losses.append(loss.item())
             accuracy = (out.argmax(dim=1) == device_targets).float().mean()
             accuracies.append(accuracy)
