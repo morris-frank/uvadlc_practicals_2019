@@ -51,7 +51,7 @@ def seq_sampling(model, dataset, seq_length, device, sampler=temperature_samplin
     for i in range(1, seq_length):
         out, h_and_c = model.forward(ramblings, h_and_c)
         ramblings[0, i] = sampler(out[0,i, ...].squeeze(), temp)
-    text = dataset.convert_to_string(ramblings.numpy().squeeze())
+    text = dataset.convert_to_string(ramblings.cpu().numpy().squeeze())
     log = "{};{};{};{}\n".format(time.time(), sampler.__name__, temp, text)
     print(log)
     return log
