@@ -44,7 +44,7 @@ def temperature_sampling(out, temp):
     return torch.multinomial(dist, 1).item()
 
 
-def seq_sampling(model, dataset, seq_length, device, sampler=temperature_sampling, temp=None):
+def seq_sampling(model, dataset, seq_length, device, step, sampler=temperature_sampling, temp=None):
     ramblings = torch.randint(dataset.vocab_size, (1, seq_length), device=device)
 
     h_and_c = None
@@ -52,7 +52,7 @@ def seq_sampling(model, dataset, seq_length, device, sampler=temperature_samplin
         out, h_and_c = model.forward(ramblings, h_and_c)
         ramblings[0, i] = sampler(out[0,i, ...].squeeze(), temp)
     text = dataset.convert_to_string(ramblings.cpu().numpy().squeeze())
-    log = "{};{};{};{}\n".format(time.time(), sampler.__name__, temp, text)
+    log = "{};{};{};{};{}\n".format(step, time.time(), sampler.__name__, temp, text)
     print(log)
     return log
 
@@ -118,9 +118,10 @@ def train(config):
                 torch.save(model, config.txt_file + '.model')
                 log = []
                 with torch.no_grad():
-                    log.append(seq_sampling(model, dataset, config.seq_length, device, greedy_sampling))
+                    log.append(seq_sampling(model, dataset, config.seq_length, device, step, greedy_sampling))
                     for T in [0.5, 1.0, 2.0]:
-                        log.append(seq_sampling(model, dataset, config.seq_length, device, temperature_sampling, temp=T))
+                        log.append(seq_sampling(model, dataset, config.seq_length, device, step, temperature_sampling,
+                                                temp=T))
                 with open(config.txt_file + '.generated', 'a') as fp:
                     fp.writelines(log)
 
