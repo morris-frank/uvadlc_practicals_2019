@@ -51,11 +51,9 @@ def seq_sampling(model, dataset, seq_length, device, step, sampler=temperature_s
         out, h_and_c = model.forward(pivot, h_and_c)
         pivot[0, 0] = sampler(out.squeeze(), temp)
         ramblings[i] = pivot[0, 0]
-        breakpoint()
     text = dataset.convert_to_string(ramblings.numpy().squeeze())
     log = "{};{};{};{};{}\n".format(step, time.time(), sampler.__name__, temp, text)
     print(log)
-    breakpoint()
     return log
 
 
