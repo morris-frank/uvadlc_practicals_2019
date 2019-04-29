@@ -2,6 +2,8 @@
 \usepackage[final]{neurips_2019}
 \usepackage{morris}
 
+% Some update to the NIPS template
+\bibpunct{[}{]}{;}{n}{}{,}
 \makeatletter
 \renewcommand{\@noticestring}{Deep Learning, Sommer 2019, Universiteit van Amsterdam}
 \makeatother
@@ -34,9 +36,33 @@
 Find the code inside \texttt{vanilla\_rnn.py} and \texttt{train.py}.
 
 \subsection{Vanilla RNN experiment}
-See Figure~\ref{subsub:lstm_practice} for a overview plot of the results and Section~\ref{subsub:lstm_practice} for a discussion/comparsion of the results.
+See Figure~\ref{fig:accuracy_loss} for a overview plot of the results and Section~\ref{sub:lstm_practice} for a discussion/comparsion of the results.
 
 \subsection{Optimizers}
+SGD has problems.
+One of them is ocurring oscilattions in valleys of the loss space.
+SGD does not have any \textit{memory} and thus just tries to approximate the currents face gradient to follow down which might make the path jump around a minimum of the valley.
+One change to counter this problem is introducing \textbf{momentum}.
+Following the intuition of the physical term, the gradient with momentum gets only changed gradually not sudden in every optimizer step.
+This is implemented as a decaying average of gradient updates.
+The weights get updated as a weighted sum of the previous update and the new gradient.
+A second idea is to tweak the learning rate for each weight and not use a fixed \(\eta\) for all, yielding a \textbf{adaptive learning rate}.
+For those weights that change a lot (bounce around some valley) we want to reduce the update step to counteract the bouncing.
+This can be seen in the RMSProp~\citep{hinton2014} optimizer as described below:
+\begin{align}
+  v_t &= \rho v_{t-1} + (1-\rho) \· {(\nabla_{\θ_t}f)}^2\\
+  \θ_{t+1} &= \θ_t - \f{\eta}{\sqrt{v_t + \ε}} \· \nabla_{\θ_t}f
+\end{align}
+\(\rho\) defines the decying sum. We compute the update but than divide the learning rate \(\eta\) for each weight by the new update.
+Thus oscillating weights will get a smaller update.
+Adam~\citep{kingma2014} optimizer works quite similar:
+\begin{align}
+  v_t &= \β_1 \· v_{t-1} - (1 - \β_1) \· \nabla_{\θ_t}f\\
+  s_t &= \β_2 \· s_{t-1} - (1 - \β_2) \· {(\nabla_{\θ_t}f)}^2\\
+  \θ_{t+1} &= \θ_t - \f{\eta}{\sqrt{s_t + \ε}} \· v_t
+\end{align}
+We also adapt the learning rate per weight by dividing by the square-root of the  squared gradients.
+But here also directly use the momentum but having the decaying sum of weight-wise gradients. \(\β_1 \text{and} \β_2\) are tuneable hyperparameters.
 
 \subsection{LSTM theory}
 \subsubsection{LSTM Gates}
@@ -59,22 +85,36 @@ Then we have
   4\· (d\·n + n\·n + n)
 \end{equation*}
 trainable parameters for \textit{one} LSTM cell.
+If we want to include the projection onto the classes \(c\) the size increases of course to:
+\begin{equation*}
+  4\· (d\·n + n\·n + n) + n\·c + c
+\end{equation*}
 
-\subsection{LSTM practice}\label{subsub:lstm_practice}
+\subsection{LSTM practice}\label{sub:lstm_practice}
 Find the code inside \texttt{lstm.py} and \texttt{train.py}.
+For a overview check out Figure~\ref{fig:accuracy_loss}.
+We see in general that the LSTM is able to learn the palindromes faster and for longer sequences.
+The RNN is only able to improve on randomness (accuracy of 0.1) up to length 17.
+Further the RNN is only able to reach full accuracy for palindromes smaller than 10.
+The LSTM learns for all lengths but we see that for length of 23 we do not see improvement over randomness until almost 3000
+(if run for lon enough the LSTM learns full accuracy for all tested lengths but we found that not be the interesting result here).
+This is explained in that we use the same hyperparameters for all experiments expecially the learning rate.
+An optimization of the hyperparameters for the LSTM might speed up training for longer sequences.
+The experiment clearly shows that the LSTM is more capable of learning longer dependencies.
 
-
-\begin{figure}\label{fig:accuracy_loss}
+\begin{figure}
   \centering
   \includegraphics[width=\linewidth]{assignment_2/part1/palindrome.pdf}
   \caption{\B{Top} the accuracy and \B{bottom} the loss while training.
   Color lightness codes the palindrome length ranging from 5 numbers with the lightest color in steps of 2 to 23 numbers with the darkest color.
-  (Making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter of size 10 for better radibility.}
+  (Making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter of size 10 for better radibility.}\label{fig:accuracy_loss}
 \end{figure}
 
 \section{Recurrent Nets as Gernerative Model}
-\subsection{}
-\subsubsection{}
+\subsection{Learning South Park}
+\subsubsection{The code}
+Find the code inside \texttt{model.py} and \texttt{train.py}.
+
 \subsubsection{}
 \subsubsection{}
 \subsection{}
@@ -88,6 +128,7 @@ Find the code inside \texttt{lstm.py} and \texttt{train.py}.
 \subsubsection{}
 \subsubsection{}
 
-
+\bibliographystyle{unsrtnat}
+\bibliography{references}
 
 \end{document}
