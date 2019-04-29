@@ -28,7 +28,7 @@ class TextGenerationModel(nn.Module):
         super(TextGenerationModel, self).__init__()
         self.batch_size = batch_size
         self.seq_length = seq_length
-        self.emsize = lstm_num_hidden
+        self.emsize = vocabulary_size
         self.embed = nn.Embedding(vocabulary_size, self.emsize)
         self.lstm = nn.LSTM(self.emsize, lstm_num_hidden, lstm_num_layers, dropout=dropout_prob)
         self.projection = nn.Linear(lstm_num_hidden, vocabulary_size)
