@@ -44,8 +44,8 @@ def temperature_sampling(out, temp):
     return torch.multinomial(dist, 1).item()
 
 
-def seq_sampling(model, dataset, seq_length, sampler=temperature_sampling, temp=None):
-    ramblings = torch.randint(dataset.vocab_size, (1, seq_length))
+def seq_sampling(model, dataset, seq_length, device, sampler=temperature_sampling, temp=None):
+    ramblings = torch.randint(dataset.vocab_size, (1, seq_length), device=device)
 
     h_and_c = None
     for i in range(1, seq_length):
@@ -118,9 +118,9 @@ def train(config):
                 torch.save(model, config.txt_file + '.model')
                 log = []
                 with torch.no_grad():
-                    log.append(seq_sampling(model, dataset, config.seq_length, greedy_sampling))
+                    log.append(seq_sampling(model, dataset, config.seq_length, device, greedy_sampling))
                     for T in [0.5, 1.0, 2.0]:
-                        log.append(seq_sampling(model, dataset, config.seq_length, temperature_sampling, temp=T))
+                        log.append(seq_sampling(model, dataset, config.seq_length, device, temperature_sampling, temp=T))
                 with open(config.txt_file + '.generated', 'a') as fp:
                     fp.writelines(log)
 
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     # Misc params
     parser.add_argument('--summary_path', type=str, default="./summaries/", help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=5, help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=20, help='How often to sample from the model')
+    parser.add_argument('--sample_every', type=int, default=500, help='How often to sample from the model')
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()
