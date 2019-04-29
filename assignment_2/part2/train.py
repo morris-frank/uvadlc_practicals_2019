@@ -17,12 +17,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import time
 from datetime import datetime
 import argparse
-
-import numpy as np
 
 import torch
 import torch.optim as optim
@@ -45,15 +42,20 @@ def temperature_sampling(out, temp):
 
 
 def seq_sampling(model, dataset, seq_length, device, step, sampler=temperature_sampling, temp=None):
-    ramblings = torch.randint(dataset.vocab_size, (1, seq_length), device=device)
+    pivot = torch.randint(dataset.vocab_size, (1, 1), device=device)
+    ramblings = torch.zeros(seq_length)
+    ramblings[0] = pivot[0, 0]
 
     h_and_c = None
     for i in range(1, seq_length):
-        out, h_and_c = model.forward(ramblings, h_and_c)
-        ramblings[0, i] = sampler(out[0,i, ...].squeeze(), temp)
-    text = dataset.convert_to_string(ramblings.cpu().numpy().squeeze())
+        out, h_and_c = model.forward(pivot, h_and_c)
+        pivot[0, 0] = sampler(out.squeeze(), temp)
+        ramblings[i] = pivot[0, 0]
+        breakpoint()
+    text = dataset.convert_to_string(ramblings.numpy().squeeze())
     log = "{};{};{};{};{}\n".format(step, time.time(), sampler.__name__, temp, text)
     print(log)
+    breakpoint()
     return log
 
 
@@ -162,7 +164,7 @@ if __name__ == "__main__":
     # Misc params
     parser.add_argument('--summary_path', type=str, default="./summaries/", help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=5, help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=500, help='How often to sample from the model')
+    parser.add_argument('--sample_every', type=int, default=10, help='How often to sample from the model')
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()
