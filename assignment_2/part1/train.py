@@ -40,14 +40,14 @@ from vanilla_rnn import VanillaRNN
 RES_FILE = 'palindrome.obj'
 
 
-def experiment(config, repeat=10):
+def experiment(config, repeat=5, stride=2, start=15):
     config.quite = True
     if os.path.exists(RES_FILE):
         with open(RES_FILE, 'rb') as fp:
-            results = pickle.load(RES_FILE)
+            results = pickle.load(fp)
     else:
         results = {'RNN': {}, 'LSTM': {}}
-    lengths = range(5, config.input_length)
+    lengths = range(start, config.input_length, stride)
     for _ in range(repeat):
         for model, length in product(results.keys(), lengths):
             print('{} with lenght {}'.format(model, length))
@@ -87,7 +87,8 @@ def train(config):
     accuracies = [0, 1]
     losses = [0, 1]
 
-    bar = tqdm(total=config.train_steps)
+    if config.quite:
+        bar = tqdm(total=config.train_steps)
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
         # Only for time measurement of step through network
         t1 = time.time()
@@ -110,7 +111,7 @@ def train(config):
         optimizer.step()
 
         # Add more code here ...
-        accuracy = (out.argmax(dim=1) == batch_targets.long()).sum().float() / float(batch_targets.shape[0])
+        accuracy = (out.argmax(dim=1) == batch_targets.long()).float().mean()
         losses.append(loss.item())
         accuracies.append(accuracy.item())
 
@@ -125,8 +126,8 @@ def train(config):
                     config.train_steps, config.batch_size, examples_per_second,
                     accuracies[-1], losses[-1]
             ))
-
-        bar.update()
+        if config.quite:
+            bar.update()
         if step == config.train_steps or np.isclose(losses[-1], losses[-2], tol):
             # If you receive a PyTorch data-loader error, check this bug report:
             # https://github.com/pytorch/pytorch/pull/9655
@@ -156,7 +157,7 @@ if __name__ == "__main__":
     parser.add_argument('--max_norm', type=float, default=10.0)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
     parser.add_argument('--run', action='store_true')
-    parser.add_argument('--quite', action='store_false')
+    parser.add_argument('--quite', action='store_true', default=False)
     config = parser.parse_args()
 
     # Train the model

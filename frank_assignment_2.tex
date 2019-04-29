@@ -1,4 +1,3 @@
-
 \documentclass{article}
 \usepackage[final]{neurips_2019}
 \usepackage{morris}
@@ -68,7 +67,9 @@ Find the code inside \texttt{lstm.py} and \texttt{train.py}.
 \begin{figure}\label{fig:accuracy_loss}
   \centering
   \includegraphics[width=\linewidth]{assignment_2/part1/palindrome.pdf}
-  \caption{\B{Top} the accuracy and \B{bottom} the loss while training. Color lightness codes the palindrome length ranging from 5 numbers with the lightest color to 15 numbers with the darkest color.}
+  \caption{\B{Top} the accuracy and \B{bottom} the loss while training.
+  Color lightness codes the palindrome length ranging from 5 numbers with the lightest color in steps of 2 to 23 numbers with the darkest color.
+  (Making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter of size 10 for better radibility.}
 \end{figure}
 
 \section{Recurrent Nets as Gernerative Model}

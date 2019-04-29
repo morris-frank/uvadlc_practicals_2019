@@ -6,7 +6,7 @@ import pickle
 plt.style.use('ggplot')
 
 
-def smooth(x, win=5):
+def smooth(x, win=10):
     k = np.ones(win, 'd')/win
     s = np.r_[x[win-1:0:-1], x, x[-2:-win-1:-1]]
     return np.convolve(k, s, mode='valid')[:len(x)]
@@ -22,16 +22,19 @@ def create_padded_array(llist):
 
 
 def plot():
-    xlim = 1500
+    lengths = range(5, 23, 2)
+    xlim = 3000
     co = 2
     with open('palindrome.obj', 'rb') as fp:
         results = pickle.load(fp)
 
-    cms = {'LSTM': ('-', cm.get_cmap('Oranges', len(results['LSTM'])+co)),
-           'RNN': ('-', cm.get_cmap('Greens', len(results['RNN'])+co))}
+    cms = {'RNN': ('-', cm.get_cmap('Greens', len(lengths)+co)),
+           'LSTM': ('-', cm.get_cmap('Oranges', len(lengths)+co))}
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6))
     for model, (lstyle, cmap) in cms.items():
-        for idx, (length, (accs, losss)) in enumerate(results[model].items()):
+        for idx, length in enumerate(lengths):
+        #for idx, (length, (accs, losss)) in enumerate(results[model].items()):
+            accs, losss = results[model][length]
             acc = create_padded_array(accs).mean(axis=0)[:xlim]
             loss = create_padded_array(losss).mean(axis=0)[:xlim]
             aline, = ax1.plot(range(len(acc)), smooth(acc), lstyle, color=cmap(idx+co), alpha=0.9)
