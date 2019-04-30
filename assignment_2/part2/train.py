@@ -53,7 +53,7 @@ def seq_sampling(model, dataset, seq_length, device, step, sampler=temperature_s
         ramblings[i] = pivot[0, 0]
     text = dataset.convert_to_string(ramblings.numpy().squeeze())
     log = "{};{};{};{};{}\n".format(step, time.time(), sampler.__name__, temp, text)
-    print(log)
+    # print(log)
     return log
 
 
@@ -69,7 +69,7 @@ def train(config):
     model = TextGenerationModel(None, None, dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers,
                                 config.device, 1. - config.dropout_keep_prob)
 
-    data_loader = DataLoader(dataset, config.batch_size, num_workers=1)
+    data_loader = iter(DataLoader(dataset, config.batch_size, num_workers=1))
 
     # Setup the loss and optimizer
     criterion = nn.CrossEntropyLoss()
@@ -79,53 +79,48 @@ def train(config):
     accuracies = [0, 1]
     losses = [0, 1]
 
-    step = 0
-    while step < config.train_steps:
-        for batch_inputs, batch_targets in data_loader:
-            step += 1
-            # Only for time measurement of step through network
-            t1 = time.time()
+    for step in range(config.train_steps):
+        batch_inputs, batch_targets = next(data_loader)
+        # Only for time measurement of step through network
+        t1 = time.time()
 
-            device_inputs = torch.stack(batch_inputs, dim=0).to(device)
-            device_targets = torch.stack(batch_targets, dim=1).to(device)
+        device_inputs = torch.stack(batch_inputs, dim=0).to(device)
+        device_targets = torch.stack(batch_targets, dim=1).to(device)
 
-            out, _ = model.forward(device_inputs)
-            outt = out.transpose(0, 1).transpose(1, 2)
-            optimizer.zero_grad()
-            loss = criterion.forward(outt, device_targets)
-            losses.append(loss.item())
-            accuracy = (outt.argmax(dim=1) == device_targets).float().mean()
-            accuracies.append(accuracy)
+        out, _ = model.forward(device_inputs)
+        outt = out.transpose(0, 1).transpose(1, 2)
+        optimizer.zero_grad()
+        loss = criterion.forward(outt, device_targets)
+        losses.append(loss.item())
+        accuracy = (outt.argmax(dim=1) == device_targets).float().mean()
+        accuracies.append(accuracy)
 
-            loss.backward()
-            optimizer.step()
-            lr_scheduler.step()
+        loss.backward()
+        optimizer.step()
+        lr_scheduler.step()
 
-            # Just for time measurement
-            t2 = time.time()
-            examples_per_second = config.batch_size/float(t2-t1)
+        # Just for time measurement
+        t2 = time.time()
+        examples_per_second = config.batch_size/float(t2-t1)
 
-            if step % config.print_every == 0:
-                print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
-                      "Accuracy = {:.2f}, Loss = {:.3f}, LR = {}".format(
-                        datetime.now().strftime("%Y-%m-%d %H:%M"), step,
-                        int(config.train_steps), config.batch_size, examples_per_second,
-                        accuracies[-1], losses[-1], optimizer.param_groups[-1]['lr']
-                ))
+        if step % config.print_every == 0:
+            print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
+                  "Accuracy = {:.2f}, Loss = {:.3f}, LR = {}".format(
+                    datetime.now().strftime("%Y-%m-%d %H:%M"), step,
+                    int(config.train_steps), config.batch_size, examples_per_second,
+                    accuracies[-1], losses[-1], optimizer.param_groups[-1]['lr']
+            ))
 
-            if step % config.sample_every == 0:
-                torch.save(model, config.txt_file + '.model')
-                log = []
-                with torch.no_grad():
-                    log.append(seq_sampling(model, dataset, config.seq_length, device, step, greedy_sampling))
-                    for T in [0.5, 1.0, 2.0]:
-                        log.append(seq_sampling(model, dataset, config.seq_length, device, step, temperature_sampling,
-                                                temp=T))
-                with open(config.txt_file + '.generated', 'a') as fp:
-                    fp.writelines(log)
-
-            if step == config.train_steps:
-                break
+        if step % config.sample_every == 0:
+            torch.save(model, config.txt_file + '.model')
+            log = []
+            with torch.no_grad():
+                log.append(seq_sampling(model, dataset, config.seq_length, device, step, greedy_sampling))
+                for T in [0.5, 1.0, 2.0]:
+                    log.append(seq_sampling(model, dataset, config.seq_length, device, step, temperature_sampling,
+                                            temp=T))
+            with open(config.txt_file + '.generated', 'a') as fp:
+                fp.writelines(log)
 
     print('Done training.')
 
