@@ -66,8 +66,7 @@ def train(config):
 
     dataset = TextDataset(config.txt_file, config.seq_length)
 
-    model = TextGenerationModel(config.batch_size, config.seq_length, dataset.vocab_size,
-                                config.lstm_num_hidden, config.lstm_num_layers,
+    model = TextGenerationModel(None, None, dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers,
                                 config.device, 1. - config.dropout_keep_prob)
 
     data_loader = DataLoader(dataset, config.batch_size, num_workers=1)
@@ -82,7 +81,7 @@ def train(config):
 
     step = 0
     while step < config.train_steps:
-        for _, (batch_inputs, batch_targets) in enumerate(data_loader):
+        for batch_inputs, batch_targets in data_loader:
             step += 1
             # Only for time measurement of step through network
             t1 = time.time()
@@ -126,8 +125,6 @@ def train(config):
                     fp.writelines(log)
 
             if step == config.train_steps:
-                # If you receive a PyTorch data-loader error, check this bug report:
-                # https://github.com/pytorch/pytorch/pull/9655
                 break
 
     print('Done training.')

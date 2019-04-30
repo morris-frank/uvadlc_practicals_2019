@@ -27,16 +27,12 @@ class TextGenerationModel(nn.Module):
                  lstm_num_hidden=256, lstm_num_layers=2, device='cuda:0', dropout_prob=0.):
 
         super(TextGenerationModel, self).__init__()
-        self.batch_size = batch_size
-        self.seq_length = seq_length
-        self.emsize = vocabulary_size
-        self.embed = nn.Embedding(vocabulary_size, self.emsize, _weight=torch.eye(self.emsize))
-        self.lstm = nn.LSTM(self.emsize, lstm_num_hidden, lstm_num_layers, dropout=dropout_prob)
+        self.embed = nn.Embedding(vocabulary_size, vocabulary_size, _weight=torch.eye(vocabulary_size))
+        self.lstm = nn.LSTM(vocabulary_size, lstm_num_hidden, lstm_num_layers, dropout=dropout_prob)
         self.projection = nn.Linear(lstm_num_hidden, vocabulary_size)
         self.to(device)
 
     def forward(self, x, h_and_c=None):
-        # assert x.shape == (self.seq_length, self.batch_size)
         embedding = self.embed(x)
         hidden_states, (h, c) = self.lstm(embedding, h_and_c)
         return self.projection(hidden_states), (h, c)
