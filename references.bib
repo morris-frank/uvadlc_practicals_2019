@@ -18,4 +18,72 @@
   file = {/home/morris/docs/eLibrary/Zotero/storage/WWIEQQJT/lecture_slides_lec6.pdf}
 }
 
+@article{kipf2016,
+  archivePrefix = {arXiv},
+  eprinttype = {arxiv},
+  eprint = {1609.02907},
+  primaryClass = {cs, stat},
+  title = {Semi-{{Supervised Classification}} with {{Graph Convolutional Networks}}},
+  url = {http://arxiv.org/abs/1609.02907},
+  abstract = {We present a scalable approach for semi-supervised learning on graph-structured data that is based on an efficient variant of convolutional neural networks which operate directly on graphs. We motivate the choice of our convolutional architecture via a localized first-order approximation of spectral graph convolutions. Our model scales linearly in the number of graph edges and learns hidden layer representations that encode both local graph structure and features of nodes. In a number of experiments on citation networks and on a knowledge graph dataset we demonstrate that our approach outperforms related methods by a significant margin.},
+  urldate = {2019-04-30},
+  date = {2016-09-09},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  author = {Kipf, Thomas N. and Welling, Max},
+  file = {/home/morris/docs/eLibrary/Zotero/storage/5GYMGAE4/Kipf und Welling - 2016 - Semi-Supervised Classification with Graph Convolut.pdf;/home/morris/docs/eLibrary/Zotero/storage/39Z2S7A9/1609.html}
+}
+
+@article{zhang2019,
+  archivePrefix = {arXiv},
+  eprinttype = {arxiv},
+  eprint = {1901.03067},
+  primaryClass = {cs},
+  title = {Multi-{{Granularity Reasoning}} for {{Social Relation Recognition}} from {{Images}}},
+  url = {http://arxiv.org/abs/1901.03067},
+  abstract = {Discovering social relations in images can make machines better interpret the behavior of human beings. However, automatically recognizing social relations in images is a challenging task due to the significant gap between the domains of visual content and social relation. Existing studies separately process various features such as faces expressions, body appearance, and contextual objects, thus they cannot comprehensively capture the multi-granularity semantics, such as scenes, regional cues of persons, and interactions among persons and objects. To bridge the domain gap, we propose a Multi-Granularity Reasoning framework for social relation recognition from images. The global knowledge and mid-level details are learned from the whole scene and the regions of persons and objects, respectively. Most importantly, we explore the fine-granularity pose keypoints of persons to discover the interactions among persons and objects. Specifically, the pose-guided Person-Object Graph and Person-Pose Graph are proposed to model the actions from persons to object and the interactions between paired persons, respectively. Based on the graphs, social relation reasoning is performed by graph convolutional networks. Finally, the global features and reasoned knowledge are integrated as a comprehensive representation for social relation recognition. Extensive experiments on two public datasets show the effectiveness of the proposed framework.},
+  urldate = {2019-04-30},
+  date = {2019-01-10},
+  keywords = {Computer Science - Computer Vision and Pattern Recognition},
+  author = {Zhang, Meng and Liu, Xinchen and Liu, Wu and Zhou, Anfu and Ma, Huadong and Mei, Tao},
+  file = {/home/morris/docs/eLibrary/Zotero/storage/Y2KZ7KAM/Zhang et al. - 2019 - Multi-Granularity Reasoning for Social Relation Re.pdf;/home/morris/docs/eLibrary/Zotero/storage/AS95XBAX/1901.html}
+}
+
+@article{feng2019,
+  title = {Temporal {{Relational Ranking}} for {{Stock Prediction}}},
+  volume = {37},
+  issn = {1046-8188},
+  url = {http://doi.acm.org/10.1145/3309547},
+  doi = {10.1145/3309547},
+  abstract = {Stock prediction aims to predict the future trends of a stock in order to help investors make good investment decisions. Traditional solutions for stock prediction are based on time-series models. With the recent success of deep neural networks in modeling sequential data, deep learning has become a promising choice for stock prediction. However, most existing deep learning solutions are not optimized toward the target of investment, i.e., selecting the best stock with the highest expected revenue. Specifically, they typically formulate stock prediction as a classification (to predict stock trends) or a regression problem (to predict stock prices). More importantly, they largely treat the stocks as independent of each other. The valuable signal in the rich relations between stocks (or companies), such as two stocks are in the same sector and two companies have a supplier-customer relation, is not considered. In this work, we contribute a new deep learning solution, named Relational Stock Ranking (RSR), for stock prediction. Our RSR method advances existing solutions in two major aspects: (1) tailoring the deep learning models for stock ranking, and (2) capturing the stock relations in a time-sensitive manner. The key novelty of our work is the proposal of a new component in neural network modeling, named Temporal Graph Convolution, which jointly models the temporal evolution and relation network of stocks. To validate our method, we perform back-testing on the historical data of two stock markets, NYSE and NASDAQ. Extensive experiments demonstrate the superiority of our RSR method. It outperforms state-of-the-art stock prediction solutions achieving an average return ratio of 98\% and 71\% on NYSE and NASDAQ, respectively.},
+  number = {2},
+  journaltitle = {ACM Trans. Inf. Syst.},
+  urldate = {2019-04-30},
+  date = {2019-03},
+  pages = {27:1--27:30},
+  keywords = {graph-based learning,learning to rank,Stock prediction},
+  author = {Feng, Fuli and He, Xiangnan and Wang, Xiang and Luo, Cheng and Liu, Yiqun and Chua, Tat-Seng},
+  file = {/home/morris/docs/eLibrary/Zotero/storage/2CRNZFTL/Feng et al. - 2019 - Temporal Relational Ranking for Stock Prediction.pdf}
+}
+
+@article{parisot2018,
+  archivePrefix = {arXiv},
+  eprinttype = {arxiv},
+  eprint = {1806.01738},
+  title = {Disease {{Prediction}} Using {{Graph Convolutional Networks}}: {{Application}} to {{Autism Spectrum Disorder}} and {{Alzheimer}}'s {{Disease}}},
+  volume = {48},
+  issn = {13618415},
+  url = {http://arxiv.org/abs/1806.01738},
+  doi = {10.1016/j.media.2018.06.001},
+  shorttitle = {Disease {{Prediction}} Using {{Graph Convolutional Networks}}},
+  abstract = {Graphs are widely used as a natural framework that captures interactions between individual elements represented as nodes in a graph. In medical applications, specifically, nodes can represent individuals within a potentially large population (patients or healthy controls) accompanied by a set of features, while the graph edges incorporate associations between subjects in an intuitive manner. This representation allows to incorporate the wealth of imaging and non-imaging information as well as individual subject features simultaneously in disease classification tasks. Previous graph-based approaches for supervised or unsupervised learning in the context of disease prediction solely focus on pairwise similarities between subjects, disregarding individual characteristics and features, or rather rely on subject-specific imaging feature vectors and fail to model interactions between them. In this paper, we present a thorough evaluation of a generic framework that leverages both imaging and non-imaging information and can be used for brain analysis in large populations. This framework exploits Graph Convolutional Networks (GCNs) and involves representing populations as a sparse graph, where its nodes are associated with imaging-based feature vectors, while phenotypic information is integrated as edge weights. The extensive evaluation explores the effect of each individual component of this framework on disease prediction performance and further compares it to different baselines. The framework performance is tested on two large datasets with diverse underlying data, ABIDE and ADNI, for the prediction of Autism Spectrum Disorder and conversion to Alzheimer's disease, respectively. Our analysis shows that our novel framework can improve over state-of-the-art results on both databases, with 70.4\% classification accuracy for ABIDE and 80.0\% for ADNI.},
+  journaltitle = {Medical Image Analysis},
+  shortjournal = {Medical Image Analysis},
+  urldate = {2019-04-30},
+  date = {2018-08},
+  pages = {117-130},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  author = {Parisot, Sarah and Ktena, Sofia Ira and Ferrante, Enzo and Lee, Matthew and Guerrero, Ricardo and Glocker, Ben and Rueckert, Daniel},
+  file = {/home/morris/docs/eLibrary/Zotero/storage/YAE9Y5F7/Parisot et al. - 2018 - Disease Prediction using Graph Convolutional Netwo.pdf;/home/morris/docs/eLibrary/Zotero/storage/B6DFCSEQ/1806.html}
+}
+
 
