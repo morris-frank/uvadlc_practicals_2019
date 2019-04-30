@@ -75,7 +75,7 @@ def train(config):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
     lr_scheduler = optim.lr_scheduler.StepLR(
-        optimizer, step_size=config.learning_rate_step, gamma=1.-config.learning_rate_decay)
+        optimizer, step_size=config.learning_rate_step, gamma=config.learning_rate_decay)
     accuracies = [0, 1]
     losses = [0, 1]
 
@@ -158,8 +158,8 @@ if __name__ == "__main__":
 
     # Misc params
     parser.add_argument('--summary_path', type=str, default="./summaries/", help='Output path for summaries')
-    parser.add_argument('--print_every', type=int, default=5, help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=500, help='How often to sample from the model')
+    parser.add_argument('--print_every', type=int, default=1000, help='How often to print training progress')
+    parser.add_argument('--sample_every', type=int, default=50000, help='How often to sample from the model')
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()

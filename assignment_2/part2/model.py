@@ -28,6 +28,7 @@ class TextGenerationModel(nn.Module):
 
         super(TextGenerationModel, self).__init__()
         self.embed = nn.Embedding(vocabulary_size, vocabulary_size, _weight=torch.eye(vocabulary_size))
+        self.embed.requires_grad = False
         self.lstm = nn.LSTM(vocabulary_size, lstm_num_hidden, lstm_num_layers, dropout=dropout_prob)
         self.projection = nn.Linear(lstm_num_hidden, vocabulary_size)
         self.to(device)
