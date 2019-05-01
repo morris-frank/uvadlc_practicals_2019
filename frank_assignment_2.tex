@@ -23,24 +23,65 @@
 
 \section{Vanilla RNN versus LSTM}
 \subsection{RNN derivatives}
+Generally we have:
 \begin{align}
   \pf{\L}{\B{W}_{ph}}
-  &= \Π \pf{}{} \· \pf{}{\B{W}_{ph}}
+  &= \pf{\L}{\B{p}} \pf{\B{p}}{\B{W}_{ph}}
 \end{align}
+
+With the two partials:
+\begin{align}
+  \pf{\L}{p_i}
+  &= -\Σ_j y_j \pf{\log\hat{y}_j}{p_i}\\
+  &= -\Σ_j \f{y_j}{\hat{y}_j}\pf{\hat{y}_j}{p_i}\\
+  &= -y_i(1-\hat{y}_i) - \Σ_{j\neq i} \f{y_j}{\hat{y}_j} \· (-\hat{y}_i\hat{y}_j)\\
+  &= -y_i + y_i\hat{y}_i + \hat{y}_i\Σ_{j\neq i} y_j\\
+  &= \hat{y}_i \left(y_i + \Σ_{j\neq i} y_j\right) - y_i\\
+  &= \hat{y}_i - y_i\\
+  &\⇔\\
+  \pf{\L}{\B{p}}
+  &= \B{p} - \B{y}\\
+\end{align}
+Note here it holds \(\Σ_i y_i = 1\) because of the one-hot encoding.
+
+The second derivative is more direct:
+\begin{align}
+  \pf{\B{p}}{\B{W}_{ph}}
+  &= \B{h}^{(T)}\\
+\end{align}
+
+leads finally to:
+\begin{align}
+  \pf{\L}{\B{W}_{ph}}
+  &= (\B{p} - \B{y}) \· \B{h}^{(T)}
+\end{align}
+
+The derivative with respect to the hidden weight we write down in its recursive form:
 \begin{align}
   \pf{\L}{\B{W}_{hh}}
-  &= \…
+  &= \pf{\L}{\B{\hat{y}}} \pf{\B{\hat{y}}}{\B{p}} \pf{\B{p}}{\B{h}^{(T)}} \pf{\B{h}^{(T)}}{\B{W}_{hh}}\\
+  \pf{\B{h}^{(T)}}{\B{W}_{hh}}
+  &= \left(1 - {\B{h}^{(T)}}^2\right)\·\pf{}{\B{W}_{hh}}\B{W}_{hh}\B{h}^{(T-1)}\\
+  &= \left(1 - {\B{h}^{(T)}}^2\right)\·\left[\left(\pf{}{\B{W}_{hh}}\B{W}_{hh}\right)\B{h}^{(T-1)} + \B{W}_{hh}\left(\pf{}{\B{W}_{hh}}\B{h}^{(T-1)}\right)\right]\\
+  &= \left(1 - {\B{h}^{(T)}}^2\right)\·\left(\B{h}^{(T-1)} + \B{W}_{hh}\pf{\B{h}^{(T-1)}}{\B{W}_{hh}}\right)\\
 \end{align}
+
+Because we had to write down \(\pf{\L}{\B{W}_{hh}}\) which we do not do for \(\pf{\L}{\B{W}_{ph}}\) we directly see the different length of the temporal dependencies in the two computational graphs.
+For the hidden weights gradient we need to transverse the whole time-sequence while the other on only ever depends on the final hidden state.
+This makes problems in practical training probable.
+The partial gradients of the hidden weights might be small and they form a product.
+The gradient might be vanishing.
+In practice this might go so far to reach the numerical limits of floating point arithmetic.
 
 \subsection{Vanilla RNN code}
 Find the code inside \texttt{vanilla\_rnn.py} and \texttt{train.py}.
 
 \subsection{Vanilla RNN experiment}
-See Figure~\ref{fig:accuracy_loss} for a overview plot of the results and Section~\ref{sub:lstm_practice} for a discussion/comparsion of the results.
+See Figure~\ref{fig:accuracy_loss} for a overview plot of the results and Section~\ref{sub:lstm_practice} for a discussion/comparison of the results.
 
-\subsection{Optimizers}
+\subsection{Optimizer}
 SGD has problems.
-One of them is ocurring oscilattions in valleys of the loss space.
+One of them is occurring oscillations in valleys of the loss space.
 SGD does not have any \textit{memory} and thus just tries to approximate the currents face gradient to follow down which might make the path jump around a minimum of the valley.
 One change to counter this problem is introducing \textbf{momentum}.
 Following the intuition of the physical term, the gradient with momentum gets only changed gradually not sudden in every optimizer step.
@@ -53,7 +94,7 @@ This can be seen in the RMSProp~\citep{hinton2014} optimizer as described below:
   v_t &= \rho v_{t-1} + (1-\rho) \· {(\nabla_{\θ_t}f)}^2\\
   \θ_{t+1} &= \θ_t - \f{\eta}{\sqrt{v_t + \ε}} \· \nabla_{\θ_t}f
 \end{align}
-\(\rho\) defines the decying sum. We compute the update but than divide the learning rate \(\eta\) for each weight by the new update.
+\(\rho\) defines the decaying sum. We compute the update but than divide the learning rate \(\eta\) for each weight by the new update.
 Thus oscillating weights will get a smaller update.
 Adam~\citep{kingma2014} optimizer works quite similar:
 \begin{align}
@@ -71,7 +112,7 @@ But here also directly use the momentum but having the decaying sum of weight-wi
   We want our state values normalized but need also negative values (otherwise the cell values would only increase) which, as in this case, can be done with a \(\tanh \), squashing the input to \([-1, 1]\).
   \item[\I{input gate} \(\B{i}^{(t)}\)] The input regulates which and how much information of the input of this time step should be included in the cell and hidden state.
   As the input gate regulates the flow it is necessary to have its values bounded to \([0,1]\) which can most directly achieved by squashing the values with the sigmoid.
-  \item[\I{forget gate} \(\B{f}^{(t)}\)] The forget gate regulates which and how much information from the old cell state should be disregared under the new information from the input (and the old hidden state).
+  \item[\I{forget gate} \(\B{f}^{(t)}\)] The forget gate regulates which and how much information from the old cell state should be disregarded under the new information from the input (and the old hidden state).
   As the forget gate only changes the importance (magnitude) of the information in the cell state it should be in \([0,1]\) which is achieved with the sigmoid.
   \item[\I{output gate} \(\B{o}^{(t)}\)] The output gate regulates which and how much information from the new cell state should go into the new hidden state.
   Again its gating the values from the other tensor which is asking for a range \([0, 1]\) achieved by the sigmoid.
@@ -98,7 +139,7 @@ The RNN is only able to improve on randomness (accuracy of 0.1) up to length 17.
 Further the RNN is only able to reach full accuracy for palindromes smaller than 10.
 The LSTM learns for all lengths but we see that for length of 23 we do not see improvement over randomness until almost 3000
 (if run for lon enough the LSTM learns full accuracy for all tested lengths but we found that not be the interesting result here).
-This is explained in that we use the same hyperparameters for all experiments expecially the learning rate.
+This is explained in that we use the same hyperparameters for all experiments especially the learning rate.
 An optimization of the hyperparameters for the LSTM might speed up training for longer sequences.
 The experiment clearly shows that the LSTM is more capable of learning longer dependencies.
 
@@ -107,10 +148,10 @@ The experiment clearly shows that the LSTM is more capable of learning longer de
   \includegraphics[width=\linewidth]{assignment_2/part1/palindrome.pdf}
   \caption{\B{Top} the accuracy and \B{bottom} the loss while training.
   Color lightness codes the palindrome length ranging from 5 numbers with the lightest color in steps of 2 to 23 numbers with the darkest color.
-  (Making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter of size 10 for better radibility.}\label{fig:accuracy_loss}
+  (Making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter of size 10 for better readability.}\label{fig:accuracy_loss}
 \end{figure}
 
-\section{Recurrent Nets as Gernerative Model}
+\section{Recurrent Nets as Generative Model}
 \subsection{Learning South Park}
 \subsubsection{The code}
 Find the code inside \texttt{model.py} and \texttt{train.py}.
@@ -151,7 +192,7 @@ Here the nodes are features capturing the historical information of one stock an
 Both historical intra and inter stock features are generated by LSTM from historical stock data.
 Again we build a graph from the edges and nodes and use GCN to predict in this case the stocks next day performance at the market.
 
-\subsection{Comparsion adn Combination of GNN and RNN}
+\subsection{Comparison adn Combination of GNN and RNN}
 \subsubsection{}
 Generally a graph structure is necessary for non-Euclidean spaces.
 \subsubsection{}
