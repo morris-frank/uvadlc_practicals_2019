@@ -20,6 +20,7 @@ from __future__ import print_function
 import time
 from datetime import datetime
 import argparse
+from itertools import product
 
 import torch
 import torch.optim as optim
@@ -32,29 +33,20 @@ from model import TextGenerationModel
 ################################################################################
 
 
-def greedy_sampling(out, temp):
-    return out.argmax()
-
-
-def temperature_sampling(out, temp):
-    dist = torch.softmax(out/temp, dim=0)
-    return torch.multinomial(dist, 1).item()
-
-
-def seq_sampling(model, dataset, seq_length, device, step, sampler=temperature_sampling, temp=None):
+def seq_sampling(model, dataset, seq_length, temp=None, device='cpu'):
     pivot = torch.randint(dataset.vocab_size, (1, 1), device=device)
-    ramblings = torch.zeros(seq_length)
-    ramblings[0] = pivot[0, 0]
+    ramblings = [pivot[0, 0].item()]
 
     h_and_c = None
     for i in range(1, seq_length):
         out, h_and_c = model.forward(pivot, h_and_c)
-        pivot[0, 0] = sampler(out.squeeze(), temp)
-        ramblings[i] = pivot[0, 0]
-    text = dataset.convert_to_string(ramblings.numpy().squeeze())
-    log = "{};{};{};{};{}\n".format(step, time.time(), sampler.__name__, temp, text)
-    # print(log)
-    return log
+        if temp is None or temp == 0:
+            pivot[0, 0] = out.squeeze().argmax()
+        else:
+            dist = torch.softmax(out.squeeze()/temp, dim=0)
+            pivot[0, 0] = torch.multinomial(dist, 1)
+        ramblings.append(pivot[0, 0].item())
+    return dataset.convert_to_string(ramblings)
 
 
 def train(config):
@@ -79,7 +71,7 @@ def train(config):
     accuracies = [0, 1]
     losses = [0, 1]
 
-    for step in range(config.train_steps):
+    for step in range(int(config.train_steps)):
         batch_inputs, batch_targets = next(data_loader)
         # Only for time measurement of step through network
         t1 = time.time()
@@ -113,14 +105,10 @@ def train(config):
 
         if step % config.sample_every == 0:
             torch.save(model, config.txt_file + '.model')
-            log = []
-            with torch.no_grad():
-                log.append(seq_sampling(model, dataset, config.seq_length, device, step, greedy_sampling))
-                for T in [0.5, 1.0, 2.0]:
-                    log.append(seq_sampling(model, dataset, config.seq_length, device, step, temperature_sampling,
-                                            temp=T))
-            with open(config.txt_file + '.generated', 'a') as fp:
-                fp.writelines(log)
+            with torch.no_grad(), open(config.txt_file + '.generated', 'a') as fp:
+                for length, temp in product([20, 30, 50, 120], [0, 0.5, 1.0, 2.0]):
+                    text = seq_sampling(model, dataset, length, temp, device)
+                    fp.write("{};{};{};{}\n".format(step, length, temp, text))
 
     print('Done training.')
 
