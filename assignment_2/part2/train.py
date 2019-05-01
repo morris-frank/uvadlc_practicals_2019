@@ -72,7 +72,7 @@ def train(config):
     losses = [0, 1]
 
     for step in range(int(config.train_steps)):
-        if step % len(dataset) == 0:
+        if step % len(data_loader) == 0:
             data_iter = iter(data_loader)
         batch_inputs, batch_targets = next(data_iter)
 
