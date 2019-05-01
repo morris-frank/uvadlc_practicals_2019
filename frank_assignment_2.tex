@@ -2,6 +2,10 @@
 \usepackage[final]{neurips_2019}
 \usepackage{morris}
 
+\usepackage{makecell}
+
+\renewcommand\cellalign{tl}
+
 % Some update to the NIPS template
 \bibpunct{[}{]}{;}{n}{}{,}
 \makeatletter
@@ -66,12 +70,12 @@ The derivative with respect to the hidden weight we write down in its recursive 
   &= \left(1 - {\B{h}^{(T)}}^2\right)\·\left(\B{h}^{(T-1)} + \B{W}_{hh}\pf{\B{h}^{(T-1)}}{\B{W}_{hh}}\right)\\
 \end{align}
 
-Because we had to write down \(\pf{\L}{\B{W}_{hh}}\) which we do not do for \(\pf{\L}{\B{W}_{ph}}\) we directly see the different length of the temporal dependencies in the two computational graphs.
-For the hidden weights gradient we need to transverse the whole time-sequence while the other on only ever depends on the final hidden state.
-This makes problems in practical training probable.
+Because we had to write down \(\pf{\L}{\B{W}_{hh}}\) recursively which we do not do for \(\pf{\L}{\B{W}_{ph}}\) we directly see the different length of the temporal dependencies in the two computational graphs.
+For the hidden weights gradient we need to transverse the whole time-sequence while the other one only ever depends on the final hidden state.
+This gives problems in practical training probable.
 The partial gradients of the hidden weights might be small and they form a product.
 The gradient might be vanishing.
-In practice this might go so far to reach the numerical limits of floating point arithmetic.
+In practice this might go so far to reach the numerical limits of floating point arithmetics.
 
 \subsection{Vanilla RNN code}
 Find the code inside \texttt{vanilla\_rnn.py} and \texttt{train.py}.
@@ -133,12 +137,18 @@ If we want to include the projection onto the classes \(c\) the size increases o
 
 \subsection{LSTM practice}\label{sub:lstm_practice}
 Find the code inside \texttt{lstm.py} and \texttt{train.py}.
-For a overview check out Figure~\ref{fig:accuracy_loss}.
+
+We train the two models (RNN and LSTM) for palindromes with sizes 5 up to 40.
+Both models get a hidden size of 128.
+We train with a learning rate of \(0.001\) until convergence of the loss.
+The weights for both models are initialized with He initialization~\cite{he2015} as this is more performs well compared to plain normal init.
+
+For a overview of the results check out Figure~\ref{fig:accuracy_loss}.
 We see in general that the LSTM is able to learn the palindromes faster and for longer sequences.
 The RNN is only able to improve on randomness (accuracy of 0.1) up to length 17.
 Further the RNN is only able to reach full accuracy for palindromes smaller than 10.
 The LSTM learns for all lengths but we see that for length of 23 we do not see improvement over randomness until almost 3000
-(if run for lon enough the LSTM learns full accuracy for all tested lengths but we found that not be the interesting result here).
+(if run for long enough the LSTM learns full accuracy for all tested lengths but we found that not be the interesting result here).
 This is explained in that we use the same hyperparameters for all experiments especially the learning rate.
 An optimization of the hyperparameters for the LSTM might speed up training for longer sequences.
 The experiment clearly shows that the LSTM is more capable of learning longer dependencies.
@@ -148,17 +158,17 @@ The experiment clearly shows that the LSTM is more capable of learning longer de
   \includegraphics[width=\linewidth]{assignment_2/part1/palindrome.pdf}
   \caption{\B{Top} the accuracy and \B{bottom} the loss while training.
   Color lightness codes the palindrome length ranging from 5 numbers with the lightest color in steps of 2 to 23 numbers with the darkest color.
-  (Making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter of size 10 for better readability.}\label{fig:accuracy_loss}
+  (Making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter with width 10 for better readability.}\label{fig:accuracy_loss}
 \end{figure}
 
 \section{Recurrent Nets as Generative Model}
 \subsection{Learning South Park}
-\subsubsection{The code}
+\subsubsection{The Implementation}
 Find the code inside \texttt{model.py} and \texttt{train.py}.
 
-\subsubsection{}
-\subsubsection{}
-\subsection{}
+\subsubsection{The results}
+
+\input{assignment_2/part2/results/southpark_2/southpark.txt.generated.tex}
 
 \section{Graph Neural Networks}
 \subsection{Forward Layer}
