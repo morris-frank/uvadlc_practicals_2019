@@ -1,3 +1,6 @@
 # UvA Deep Learning Course Practical Assignments
 
-- Assignment 1 is released. The deadline is **April 17th, 23:59**.
+[Course Website](https://uvadlc.github.io/)
+
+- Assignment 1:  MLPs, CNNs and Backpropagation
+- Assignment 2: Recurrent Neural Networks and Graph Neural Networks
