@@ -23,9 +23,7 @@ import torch.nn as nn
 
 class TextGenerationModel(nn.Module):
 
-    def __init__(self, batch_size, seq_length, vocabulary_size,
-                 lstm_num_hidden=256, lstm_num_layers=2, device='cuda:0', dropout_prob=0.):
-
+    def __init__(self, vocabulary_size, lstm_num_hidden=256, lstm_num_layers=2, device='cuda:0', dropout_prob=0.):
         super(TextGenerationModel, self).__init__()
         self.embed = nn.Embedding(vocabulary_size, vocabulary_size, _weight=torch.eye(vocabulary_size))
         self.embed.requires_grad = False

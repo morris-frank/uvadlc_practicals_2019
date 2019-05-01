@@ -58,8 +58,8 @@ def train(config):
 
     dataset = TextDataset(config.txt_file, config.seq_length)
 
-    model = TextGenerationModel(None, None, dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers,
-                                config.device, 1. - config.dropout_keep_prob)
+    model = TextGenerationModel(dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers, config.device,
+                                1. - config.dropout_keep_prob)
 
     data_loader = DataLoader(dataset, config.batch_size, num_workers=1)
 
