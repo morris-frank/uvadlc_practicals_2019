@@ -57,6 +57,7 @@ def train(config):
     # Initialize the model that we are going to use
 
     dataset = TextDataset(config.txt_file, config.seq_length)
+    torch.save(dataset, config.txt_file + '.dataset')
 
     model = TextGenerationModel(dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers, config.device,
                                 1. - config.dropout_keep_prob)
@@ -137,7 +138,7 @@ if __name__ == "__main__":
     # It is not necessary to implement the following three params, but it may help training.
     parser.add_argument('--learning_rate_decay', type=float, default=0.96, help='Learning rate decay fraction')
     parser.add_argument('--learning_rate_step', type=int, default=5000, help='Learning rate step')
-    parser.add_argument('--dropout_keep_prob', type=float, default=1.0, help='Dropout keep probability')
+    parser.add_argument('--dropout_keep_prob', type=float, default=0.95, help='Dropout keep probability')
 
     parser.add_argument('--train_steps', type=int, default=1e6, help='Number of training steps')
     parser.add_argument('--max_norm', type=float, default=5.0, help='--')
@@ -145,7 +146,7 @@ if __name__ == "__main__":
     # Misc params
     parser.add_argument('--summary_path', type=str, default="./summaries/", help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=1000, help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=10000, help='How often to sample from the model')
+    parser.add_argument('--sample_every', type=int, default=1000, help='How often to sample from the model')
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()

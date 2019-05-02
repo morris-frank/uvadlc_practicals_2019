@@ -86,7 +86,7 @@ See Figure~\ref{fig:accuracy_loss} for a overview plot of the results and Sectio
 \subsection{Optimizer}
 SGD has problems.
 One of them is occurring oscillations in valleys of the loss space.
-SGD does not have any \textit{memory} and thus just tries to approximate the currents face gradient to follow down which might make the path jump around a minimum of the valley.
+SGD does not have any \textit{memory} and thus just tries to approximate the currents face's gradient to follow down which might make the path jump around a minimum of the valley.
 One change to counter this problem is introducing \textbf{momentum}.
 Following the intuition of the physical term, the gradient with momentum gets only changed gradually not sudden in every optimizer step.
 This is implemented as a decaying average of gradient updates.
@@ -166,15 +166,47 @@ The experiment clearly shows that the LSTM is more capable of learning longer de
 \subsubsection{The Implementation}
 Find the code inside \texttt{model.py} and \texttt{train.py}.
 
+We implement the basic character-level language model using two stacked LSTM cells.
+Both cells are followed by a Dropout unit.
+We use a linear projection to project the hidden state from the second LSTM down on the class predictions.
+As we get a sequence of characters as input we use an embedding with fixed identity weights (one-hot encoding) to process the input for the LSTM.
+We set the hidden size of both cells to 128.
+The dropout layer is set at 0.05 dropout probability.
+
+We train the model with the Adam optimizer feeding it sequences of 30 characters from the text in mini-batches of 64.
+The initial learning rate is set at 2e-3.
+Further we decay the global learning rate every 5000 steps by 0.04.
+
 \subsubsection{The results}
+For training we feed the model with all transcripts of the television series South Park.
+See Figure~\ref{fig:training_southpark} for the training progress in the first 1e5 steps.
+
+To understand the generative power of our model qualitatively we sample from the language model at different steps during training.
+Sampling is done by picking a first character uniformly by random.
+Next we iteratively feed the character into the model generate new hidden and cell states.
+From the hidden state we can sample a new character under different temperatures.
+The new character is saved in the string and fed back to the model with the new hidden and cell state.
+We do this until we reached the desired output length.
+
+Following are text samples of length 20, 30, 50 and 120 at step 0, 1e4, 2e4, 3e4, 4e4, 5e4, 1e6, 2e6 and 5e6.
+Each step we sample at temperatures \(T\in\) 0, 0.5, 1 and 2.0.
+Note that temperatures 0 corresponds to greedy sampling, meaning we pick the character with the highest probability.
+
+\vspace{1em}
+\input{assignment_2/part2/results/southpark_2/southpark.txt.generated.tex}
+\vspace{1em}
+
+We see some general trends.
+At temperature of 2.0 the model never able to form words which suggests that this is too high.
+Most interesting we see the model being able to generate almost coherent sentence early on in training as e.g.\ at step 1000 with \(T=0.5\).
 
 \begin{figure}
   \centering
   \includegraphics[width=\linewidth]{assignment_2/part2/results/southpark_2/southpark.pdf}
-  \caption{Accuracy, Loss and the decaying Learning Rate for the LSTM language model during training using the South Path transcripts.}
+  \caption{Accuracy, Loss and the decaying Learning Rate for the LSTM language model during training using the South Path transcripts.
+  Note that accuracy and loss are a bad surrogate for our task as they describe the capability of the model to predict the next character given a string while our actual goal is to get a generative model.}
+  \label{fig:training_southpark}
 \end{figure}
-
-\input{assignment_2/part2/results/southpark_2/southpark.txt.generated.tex}
 
 \section{Graph Neural Networks}
 \subsection{Forward Layer}

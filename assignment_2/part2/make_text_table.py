@@ -20,7 +20,7 @@ def make_table(fpath, steps):
             output += "\n\\hspace*{-0.2\\textwidth}\\resizebox{1.4\\textwidth}{!}{\n"
         # BEGIN TABLE
         output += "\\begin{minipage}{0.7\\textwidth}\n\\begin{tabularx}{\\textwidth}{ccX}\n"
-        output += "\\multicolumn{3}{c}{\\textbf{" + str(step) + "}}\\\\"
+        output += "\\multicolumn{3}{c}{\\Large {" + str(step) + "}}\\\\\\toprule\n"
         output += "Temp & l & Samples \\\\ \\toprule\n"
         for temp in temps:
             stdf = sdf[sdf.temp == temp]

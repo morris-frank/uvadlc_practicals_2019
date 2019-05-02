@@ -28,7 +28,7 @@ class TextDataset(data.Dataset):
         assert os.path.splitext(filename)[1] == ".txt"
         self._seq_length = seq_length
         self._data = open(filename, 'r', encoding='iso-8859-1', errors='ignore').read()
-        self._chars = list(set(self._data))
+        self._chars = sorted(list(set(self._data)))
         self._data_size, self._vocab_size = len(self._data), len(self._chars)
         print("Initialize dataset with {} characters, {} unique.".format(
             self._data_size, self._vocab_size))
@@ -44,6 +44,9 @@ class TextDataset(data.Dataset):
 
     def convert_to_string(self, char_ix):
         return ''.join(self._ix_to_char[ix] for ix in char_ix)
+
+    def convert_from_string(self, string):
+        return [self._char_to_ix[ch] for ch in string]
 
     def __len__(self):
         return self._data_size

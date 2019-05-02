@@ -33,7 +33,6 @@ def plot():
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6))
     for model, (lstyle, cmap) in cms.items():
         for idx, length in enumerate(lengths):
-        #for idx, (length, (accs, losss)) in enumerate(results[model].items()):
             accs, losss = results[model][length]
             acc = create_padded_array(accs).mean(axis=0)[:xlim]
             loss = create_padded_array(losss).mean(axis=0)[:xlim]
