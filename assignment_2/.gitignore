@@ -1,1 +1,2 @@
-part2/results
+part2/results/**/*generated
+*model
