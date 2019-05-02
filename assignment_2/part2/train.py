@@ -21,6 +21,7 @@ import time
 from datetime import datetime
 import argparse
 from itertools import product
+import random
 
 import torch
 import torch.optim as optim
@@ -34,7 +35,9 @@ from model import TextGenerationModel
 
 
 def seq_sampling(model, dataset, seq_length, temp=None, device='cpu'):
-    pivot = torch.randint(dataset.vocab_size, (1, 1), device=device)
+    # Only start with a lowercase character:
+    pivot = torch.Tensor([[dataset._char_to_ix[chr(97 + random.randint(0, 25))]]], device=device).long()
+    #pivot = torch.randint(dataset.vocab_size, (1, 1), device=device)
     ramblings = [pivot[0, 0].item()]
 
     h_and_c = None
