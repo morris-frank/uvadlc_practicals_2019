@@ -127,9 +127,9 @@ if __name__ == "__main__":
 
     # Model params
     parser.add_argument('--txt_file', type=str, required=True, help="Path to a .txt file to train on")
-    parser.add_argument('--seq_length', type=int, default=30, help='Length of an input sequence')
+    parser.add_argument('--seq_length', type=int, default=40, help='Length of an input sequence')
     parser.add_argument('--lstm_num_hidden', type=int, default=128, help='Number of hidden units in the LSTM')
-    parser.add_argument('--lstm_num_layers', type=int, default=2, help='Number of LSTM layers in the model')
+    parser.add_argument('--lstm_num_layers', type=int, default=3, help='Number of LSTM layers in the model')
 
     # Training params
     parser.add_argument('--batch_size', type=int, default=64, help='Number of examples to process in a batch')
@@ -137,10 +137,10 @@ if __name__ == "__main__":
 
     # It is not necessary to implement the following three params, but it may help training.
     parser.add_argument('--learning_rate_decay', type=float, default=0.96, help='Learning rate decay fraction')
-    parser.add_argument('--learning_rate_step', type=int, default=5000, help='Learning rate step')
+    parser.add_argument('--learning_rate_step', type=int, default=20000, help='Learning rate step')
     parser.add_argument('--dropout_keep_prob', type=float, default=0.95, help='Dropout keep probability')
 
-    parser.add_argument('--train_steps', type=int, default=1e6, help='Number of training steps')
+    parser.add_argument('--train_steps', type=int, default=0.5e6, help='Number of training steps')
     parser.add_argument('--max_norm', type=float, default=5.0, help='--')
 
     # Misc params
