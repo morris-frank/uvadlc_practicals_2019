@@ -3,7 +3,6 @@
 \usepackage{morris}
 
 \usepackage{makecell}
-
 \renewcommand\cellalign{tl}
 
 % Some update to the NIPS template
@@ -162,7 +161,7 @@ The experiment clearly shows that the LSTM is more capable of learning longer de
 \end{figure}
 
 \section{Recurrent Nets as Generative Model}
-\subsection{Learning South Park}
+\subsection{Learning English from South Park and the Moses}
 \subsubsection{The Implementation}
 Find the code inside \texttt{model.py} and \texttt{train.py}.
 
@@ -177,8 +176,13 @@ We train the model with the Adam optimizer feeding it sequences of 30 characters
 The initial learning rate is set at 2e-3.
 Further we decay the global learning rate every 5000 steps by 0.04.
 
+We preprocess the text files by reducing the set of characters.
+All text is made lowercase and line breaks are removed.
+We remove special, uncommon characters (e.g. acutes from German and Spanish) replacing them: e.g. ö \(\to\) o and\ ;\ \(\to\)\ ,.
+
 \subsubsection{The results}
-For training we feed the model with all transcripts of the television series South Park.
+For training we feed the model with all transcripts of the television series \textbf{South Park}.
+In total the transcript have 813k words.
 See Figure~\ref{fig:training_southpark} for the training progress in the first 1e5 steps.
 
 To understand the generative power of our model qualitatively we sample from the language model at different steps during training.
@@ -199,6 +203,15 @@ Note that temperatures 0 corresponds to greedy sampling, meaning we pick the cha
 We see some general trends.
 At temperature of 2.0 the model never able to form words which suggests that this is too high.
 Most interesting we see the model being able to generate almost coherent sentence early on in training as e.g.\ at step 1000 with \(T=0.5\).
+
+In a second experiment we feed the network the \textbf{five books of Moses} from the old testament.
+Compared to the previous transcript this text only has 156k words.
+We extend the model architecture to check if that increases the generative power.
+For that we us \textit{three} stacked LSTM cells.
+Further we feed sequences of 40 characters and decay the global learning rate only all 20k steps.
+All other parameters are set as before.
+
+Trainings progress was similar to the first experiment so we just give exemplary qualitative results below.
 
 \begin{figure}
   \centering
