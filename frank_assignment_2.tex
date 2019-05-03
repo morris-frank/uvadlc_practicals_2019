@@ -139,16 +139,16 @@ Find the code inside \texttt{lstm.py} and \texttt{train.py}.
 
 We train the two models (RNN and LSTM) for palindromes with sizes 5 up to 40.
 Both models get a hidden size of 128.
-We train with a learning rate of \(0.001\) until convergence of the loss.
-The weights for both models are initialized with He initialization~\cite{he2015} as this is more performs well compared to plain normal init.
+As optimizer we use  RMSprop with a learning rate of \(0.001\) until convergence of the loss.
+The weights for both models are initialized with He initialization~\cite{he2015} as it performs well compared to plain normal init.
 
 For a overview of the results check out Figure~\ref{fig:accuracy_loss}.
 We see in general that the LSTM is able to learn the palindromes faster and for longer sequences.
-The RNN is only able to improve on randomness (accuracy of 0.1) up to length 17.
+The RNN is only able to improve on randomness (\(=\) accuracy of 0.1) up to length 17.
 Further the RNN is only able to reach full accuracy for palindromes smaller than 10.
-The LSTM learns for all lengths but we see that for length of 23 we do not see improvement over randomness until almost 3000
-(if run for long enough the LSTM learns full accuracy for all tested lengths but we found that not be the interesting result here).
-This is explained in that we use the same hyperparameters for all experiments especially the learning rate.
+The LSTM reaches perfect accuracy for all lengths but we see that for length of 23 we do not see improvement over randomness until almost 3000.
+If run for long enough the LSTM learns full accuracy for all tested lengths but we found that not be the interesting result here.
+The LSTM learning slower at higher lengths is explained in that we use the same hyperparameters for all experiments especially the learning rate.
 An optimization of the hyperparameters for the LSTM might speed up training for longer sequences.
 The experiment clearly shows that the LSTM is more capable of learning longer dependencies.
 
@@ -156,16 +156,19 @@ The experiment clearly shows that the LSTM is more capable of learning longer de
   \centering
   \includegraphics[width=\linewidth]{assignment_2/part1/palindrome.pdf}
   \caption{\B{Top} the accuracy and \B{bottom} the loss while training.
-  Color lightness codes the palindrome length ranging from 5 numbers with the lightest color in steps of 2 to 23 numbers with the darkest color.
-  (Making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter with width 10 for better readability.}\label{fig:accuracy_loss}
+  Lightness of the color codes the palindrome length ranging from 5 numbers at the lightest color in steps of 2 to 23 numbers at the darkest color.
+  (making 9 curves per model). All curves are an average of ten runs and smoothed with a box filter with width 10 for better readability. Note that two of the RNN curves never increase over 0.1 in the accuracy plot.}\label{fig:accuracy_loss}
 \end{figure}
 
 \section{Recurrent Nets as Generative Model}
 \subsection{Learning English from South Park and the Moses}
+In these experiment we train a simple character-level language model with LSTM.
+We train from texts from the bible and the television show South Park.
+
 \subsubsection{The Implementation}
 Find the code inside \texttt{model.py} and \texttt{train.py}.
 
-We implement the basic character-level language model using two stacked LSTM cells.
+We implement the basic character-level language model using two stacked LSTM cells (three for the second experiment).
 Both cells are followed by a Dropout unit.
 We use a linear projection to project the hidden state from the second LSTM down on the class predictions.
 As we get a sequence of characters as input we use an embedding with fixed identity weights (one-hot encoding) to process the input for the LSTM.
@@ -223,7 +226,7 @@ Trainings progress was similar to the first experiment so we just give exemplary
 
 \section{Graph Neural Networks}
 \subsection{Forward Layer}
-\subsubsection{}
+\subsubsection{Message passing in a GNN}
 The \(\hat{A}\) matrix contains the edge information between the nodes in the graph.
 This includes the self-connections of all nodes from the identity \(\1_N\).
 We update the activations with \(H^{l+1} = \σ(\hat{A}H^{(l)}W^{(l)})\).
@@ -231,7 +234,7 @@ So we update the activation associated with one node only for the activations of
 A node is changed by the nodes its connected to.
 In reverse we can see that information in one node can propagate to all connected adjacent nodes in one time step which can be visualized as the message passing over the graph.
 
-\subsubsection{}
+\subsubsection{How many layers to propagate a message along three hops?}
 In every layer of the GCN you can propagate information along one edge so to let information reach a node three hops away we would need three layers.
 
 \subsection{Applications of GNN}\label{sub:applications_gnn}
@@ -254,19 +257,22 @@ Both historical intra and inter stock features are generated by LSTM from histor
 Again we build a graph from the edges and nodes and use GCN to predict in this case the stocks next day performance at the market.
 
 \subsection{Comparison and Combination of GNN and RNN}
-\subsubsection{}
-Using a RNN assumes our data can be is orderable along one axis meaning every node of information is at most connected to one \textit{previous} and one \textit{next} node of information and that no two nodes have the same previous or next node.
+\subsubsection{Comparing GNN and RNN}
+Using a RNN assumes our data is orderable along one axis, meaning every node of information is at most connected to one \textit{previous} and one \textit{next} node of information and that no two nodes have the same previous or next node.
 For the GNN we assume data whose node of information is related to an irregular number of other nodes.
 
-- given relationships weight
+One major difference for the two is that the GNN can give edges between, relationship between to states, a weight or a feature itself.
+For the RNN we assume a equidistant (temporal etc.) edge between each node while for the graph we can adjust this.
 
-\subsubsection{}
+
+\subsubsection{Combining GNN and RNN}
 We saw such a combination of RNN and GNN models in Section~\ref{sub:applications_gnn} already. The work on prediction of stock markets used LSTM and GCN in conjunction.
 In there each node of graph related to a linear temporal structure, the historic sock data.
 As those linear temporal graphs where themselves related to each other one can use a graph model to analyze.
+
 The reverse idea also seems plausible by using a RNN to go over nodes of graphs.
 Imaginable might here be an application where the data is organized in a graph, let's say a social graph, but is subject to temporal changes.
-A GNN could be used to analyze the state of the graph at one given point while the GNN uses these temporal states and can for example predict future states from that.
+A GNN could be used to analyze the state of the graph at one given point while the RNN uses these temporal states and can for example predict future states from that.
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
