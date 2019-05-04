@@ -236,8 +236,6 @@ Lastly we can use this language model to complete sentences. For that we take th
   schmidhuber is\dots & \dots a meat offering, and the other side of the tabernacle of the congregation, and when it is unclean unto you.\\\bottomrule
 \end{tabularx}
 
-
-
 \begin{figure}
   \centering
   \includegraphics[width=\linewidth]{assignment_2/part2/results/southpark_2/southpark.pdf}
@@ -281,11 +279,17 @@ Again we build a graph from the edges and nodes and use GCN to predict in this c
 \subsection{Comparison and Combination of GNN and RNN}
 \subsubsection{Comparing GNN and RNN}
 Using a RNN assumes our data is orderable along one axis, meaning every node of information is at most connected to one \textit{previous} and one \textit{next} node of information and that no two nodes have the same previous or next node.
-For the GNN we assume data whose node of information is related to an irregular number of other nodes.
+For the GNN we assume data whose node of information is related to an irregular number of other nodes. One major difference for the two is that the GNN can give edges between, relationship between two states, a weight or a feature itself. More specific for the RNN we assume a equidistant (temporal etc.) edge between each node while for the graph we can adjust this.
 
-One major difference for the two is that the GNN can give edges between, relationship between to states, a weight or a feature itself.
-For the RNN we assume a equidistant (temporal etc.) edge between each node while for the graph we can adjust this.
+RNN is more suitable and will outperform GNN if this rigid structure is fullfilled. For example learning word embeddings (words are sequences of letters with no given edge differences) are still a successful application of RNN.
 
+One can assume GNN outperforming an RNN model if working on structured data that warrants graph representation.
+Further many highly regular structured datasets can be preprocessed to a form in which a GNN can be fully utilized.
+For example texts are themselves not directly a graph representation but if we preprocess them to get find syntactic structure and maybe dependency graphs the application of GNN becomes more obvious.
+
+One topic were GNN are the useable and RNN models miss the complexity to capture the data's complexity is in Physics and Chemistry~\cite{zhou2018}.
+One example here is molecular fingerprinting.
+The highly complex graph structure of molecules makes it difficult to embed this structure through a RNN model but there are multiple works on using GNN or more specific GCN, for working with molecule data.
 
 \subsubsection{Combining GNN and RNN}
 We saw such a combination of RNN and GNN models in Section~\ref{sub:applications_gnn} already. The work on prediction of stock markets used LSTM and GCN in conjunction.
