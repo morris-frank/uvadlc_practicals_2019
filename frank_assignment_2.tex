@@ -207,14 +207,36 @@ We see some general trends.
 At temperature of 2.0 the model never able to form words which suggests that this is too high.
 Most interesting we see the model being able to generate almost coherent sentence early on in training as e.g.\ at step 1000 with \(T=0.5\).
 
-In a second experiment we feed the network the \textbf{five books of Moses} from the old testament.
+In a second experiment we feed the network the \textbf{five books of Moses} from the old testament in the version of King James.
 Compared to the previous transcript this text only has 156k words.
 We extend the model architecture to check if that increases the generative power.
 For that we us \textit{three} stacked LSTM cells.
 Further we feed sequences of 40 characters and decay the global learning rate only all 20k steps.
 All other parameters are set as before.
 
-Trainings progress was similar to the first experiment so we just give exemplary qualitative results below.
+Trainings progress was similar to the first experiment so we just give exemplary qualitative results below. All examples are at temperature \(T=0.5\):
+
+\begin{tabularx}{\linewidth}{rX}
+  Step & Sample sentence (first letter random) \(T=0.5\)\\\toprule
+  1000 & d the proord of the make of the land the panctoure at the lord, and his hase unth alt the come of the thald the lord the\\
+  5000 & pearn, and the place of the sight of the children of israel, and put the place of the children of israel, and the place\\
+  7000 & and say unto moses, and keep the tabernacle, and that the lord thy god in the mighty will the lord thy god\\
+  50000 &  had sinners. and the lord spake unto moses, saying, speak unto the children of israel in my hand, and thy sons in the\\
+  150000 & me a graven image, or a meat offering: one golden spoon of ten shekels, full of incense, and the hittites\\ \bottomrule
+\end{tabularx}
+
+Lastly we can use this language model to complete sentences. For that we take the cleaned input and also feed it to the model character by character. After going through the part sentence we can as before continue sampling new characters:
+
+\begin{tabularx}{\linewidth}{lX}
+  Beginning & Hallucinated completion\\ \toprule
+  you shall\dots & \dots be burning, and say unto them, when ye come unto the lord for the presence of the people from the morning, and the priest shall burn the thing that good land.\\
+  god will\dots & \dots proclaim the land which the lord thy god shall choose to place his name there. and israel dwelt in the seed of the land, and the lord hath destroyed them.\\
+  in the beginning god\dots & \dots created his sight, and the land which the lord hath bound her son. and the lord said unto moses, the lord had said unto them, they shall not be destroyed in the field\\
+  yoshua bengio is\dots & \dots god, and the perizzites, and the two tables of the covenant with them. and the lord said unto moses, i will put them on the earth.\\
+  schmidhuber is\dots & \dots a meat offering, and the other side of the tabernacle of the congregation, and when it is unclean unto you.\\\bottomrule
+\end{tabularx}
+
+
 
 \begin{figure}
   \centering
