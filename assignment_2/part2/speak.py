@@ -22,22 +22,22 @@ def seq_sampling(model, dataset, seq, seq_length, temp=None):
     return dataset.convert_to_string(ramblings)
 
 
-def speak(mpath, dpath):
+def speak(mpath, dpath, length):
     model = torch.load(mpath, map_location='cpu')
-    dataset = TextDataset(dpath, 30)
-    inp = 'jew'
-    idxs = dataset.convert_from_string(inp)
-    text = seq_sampling(model, dataset, idxs, 30, temp=0.5)
-    print(text)
-    breakpoint()
+    dataset = torch.load(dpath)
+    while True:
+        _input = input('give me a string? ')
+        idxs = dataset.convert_from_string(_input.lower())
+        text = seq_sampling(model, dataset, idxs, length, temp=0.5)
+        print(text)
 
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('--model', type=str)
-    parser.add_argument('--data', type=str)
+    parser.add_argument('--path', type=str)
+    parser.add_argument('--length', type=int, default=200)
     args = parser.parse_args()
-    speak(args.model, args.data)
+    speak(args.path + '.model', args.path + '.dataset', args.length)
 
 
 if __name__ == '__main__':
