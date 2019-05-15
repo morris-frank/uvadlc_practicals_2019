@@ -36,7 +36,7 @@ Let us first note down the two objectives of the VAE and a standard sparse autoe
   {||D_{AE}(E_{AE}(\B{X})) - \B{X}||}^2 &+ \λ||E_{AE}(\B{X})||_0
 \end{align}
 
-For the sparse autoencoder we use \(D_{AE}, E_{AE}\) for the Decoder model and Encoder model and \(\λ\) is our regularization hyperparameter.
+For the sparse autoencoder we use \(D_{AE}, E_{AE}\) for the Decoder model and Encoder model and \( \λ \) is our regularization hyperparameter.
 The main similarity between both is that they have the encoder and decoder pair.
 The encoder encodes the data into a smaller latent space and the decode generates samples from this space back into our datasets space \(X\).
 
@@ -73,7 +73,7 @@ Than we sample each pixel from each bernoulli \(\text{pixel}_m \sim \text{Bern}(
 
 \subsection{Why is the assumption of \(p(Z)\) not restrictive?}
 Our assumption that \(p(Z)\) is a standard-normal distribution does not hinder us from learning a complex manifold for \(X\) as we transform it using \(f_\θ(\·)\).
-Thus the complexity lies in the mapping from latent z-space and x-space.
+Thus the complexity lies in the mapping from latent \(z\)-space and \(x\)-space.
 
 \subsection{Evaluating \(\log p(\B{x}_n)\)}
 \subsubsection{Approximating using Monte-Carlo}
@@ -86,7 +86,7 @@ We can sample from our distribution of \(\B{z}_n\) to compute the integral for o
 
 \subsubsection{Why is Monte-Carlo integration here inefficient?}
 We sample from \(p(Z)\).
-As we nee the integral for each datapoint this is inefficient with any non trivial dimensionality in Z.
+As we nee the integral for each datapoint this is inefficient with any non trivial dimensionality in \(Z\).
 The precision of our density estimation of \(p(\B{x}_n|\B{z}_n)\) decreases exponentially as the dimension of \(\B{x}_n\) increases.
 As such we would need to increase the number of samples exponentially with higher dimension of \(\B{z}_n\) to keep the estimation precise.
 In the real world the hidden embeddings often has hundreds of dimensions.
@@ -96,7 +96,7 @@ A density dimension that we would have to do for every single input in every inf
 We assume: \(q = \N(\μ_q, \σ_q^2),\quad p=\N(0,1)\)
 
 \subsubsection{Two examples of KL-divergence}
-Checking with the closed form solution in Section~\ref{sec:kl_closed_form} we see as expected that the divergence is zero for \(\σ_q = 1, \μ_q = 0\) and increases for any deviation from either of those values:
+Checking with the closed form solution in Section~\ref{sec:kl_closed_form} we see as expected that the divergence is zero for \( \σ_q = 1, \μ_q = 0\) and increases for any deviation from either of those values:
 \begin{align}
   \t{Big:}&\quad(1 + 10^{5}, 10^{5}) \⇒ D_{\t{KL}}(q||p) = \num{1.0d10}\\
   \t{Small:}&\quad(1 + 10^{-5}, 10^{-5}) \⇒ D_{\t{KL}}(q||p) = \num{1.49d-10}
@@ -134,8 +134,49 @@ The lower bound always stays a lower bound so maximizing the lower bound does al
 
 \subsection{Why do we optimize the lower bound instead of the log-probability?}
 We must optimize the lower bound as we cannot compute \(D_{\t{KL}}(q(Z|\B{x}_n)||p(Z|\B{x}_n))\).
+Computing this divergence would mean we need to compute \(p(z|\B{x}_N)\).
+If we could do this we would not have introduced \(q(z|\B{x}_n)\).
 
-\subsection{Pushing the lower bound}
+\subsection{What can happen if we push ELBO up?}
+Basically the two things that can happen is either our data log probability \(\log p(\B{x}_N)\) rises or the divergence between \(q(Z|\B{x}_n)\) and \(p(Z|\B{x}_n)\) gets lower.
+Both ways are good for us.
+In the first case the likelihood of the trainings data rises meaning we get a better ML model.
+The reconstruction gets better.
+In the second case our surrogate gets more similar to the actual encoding which means we improve our embeddings.
+
+\subsection{How can we name the parts of the loss of an VAE?}
+We can write the loss of the VAE as the per-sample sum of the \textit{reconstruction} and the \textit{regularizer} loss:
+\begin{align}
+  \L^{\t{recon}}_n &= - \E_{q_\φ(z|\B{x}_n)}[\log p_\θ(\B{x}_n|Z)]\\
+  \L^{\t{ref}}_n &= D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))\\
+  \L &= \÷{1}{N}\Σ_{n=1}^N (\L^{\t{recon}}_n + \L^{\t{reg}}_n)
+\end{align}
+
+As written before \(\L^{\t{recon}}_n\) gives us the negative data likelihood of the input sample \(\B{x}_n\) using its embedding from the encoder \(q_\φ(\·)\).
+In other words this gives us the reconstruction probability of \(\B{x}_n\) using the decoder \(p_\θ(\·)\) under an already set embedding for \(\B{x}_n\), but negative (to get a loss).
+
+As we have an VAE not an standard autoencoder we actually model the distribution \(q_\φ(Z|X)\) to have a generalizing model in which we can interpolate inside the embedding space of \(z\).
+Having the continuos z-space is the models regularization.
+Our metric for how good our projection from \(x\) to \(z\) is, is the KL divergence from the actual \(p(Z|X)\).
+Therefore it is fair to say that the divergence is called the regularization loss.
+
+\subsection{Writing down the complete loss}
+We assume for our encoder:
+\begin{align}
+  q_\φ(\B{z}_n|\B{x}_n) &= \N(\B{z}_n)\μ_\φ(\B{x}_n, \diag(\Sigma_\φ(\B{x}_n)))
+\end{align}
+
+\begin{align}
+  \L^{\t{recon}}_n
+  &= -\E_{q_\φ(z|\B{x}_n)}[\log p_\θ(\B{x}_n|Z)]\\
+  &\approx -\log p_\θ(\B{x}_n|\B{z}_n)\quad \t{with } \B{z}_n\sim q_\φ (Z|\B{x}_n)\\
+  \L^{\t{ref}}_n
+  &= D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))\\
+  &= \÷{{\Sigma_\φ(\B{x}_n)}^2 + {\μ_\φ(\B{x}_n)}^2 -1}{2} -\log \Sigma_\φ(\B{x}_n)\\
+  \L
+  &= \÷{1}{N}\Σ_{n=1}^N (\L^{\t{recon}}_n + \L^{\t{reg}}_n)\\
+  &=
+\end{align}
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
