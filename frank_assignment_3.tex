@@ -32,7 +32,7 @@ We have:
 Let us first note down the two objectives of the VAE and a standard sparse autoencoder~\cite{doersch2016}, respectively:
 
 \begin{align}
-  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}] &- D_{KL}(q(Z|\B{x}_n)||p(Z))]\\
+  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}] &- D_{KL}(q(Z|\B{x}_n)||p(Z))\\
   {||D_{AE}(E_{AE}(\B{X})) - \B{X}||}^2 &+ \λ||E_{AE}(\B{X})||_0
 \end{align}
 
@@ -102,7 +102,7 @@ Checking with the closed form solution in Section~\ref{sec:kl_closed_form} we se
   \t{Small:}&\quad(1 + 10^{-5}, 10^{-5}) \⇒ D_{\t{KL}}(q||p) = \num{1.49d-10}
 \end{align}
 
-\subsubsection{Closed-form solution of the KL-divergence}
+\subsubsection{Closed-form solution of the KL-divergence}%
 \label{sec:kl_closed_form}
 \begin{align}
   q(x) &= \÷{1}{\sqrt{2\π}\σ_q} \exp{\left[-\÷{1}{2}{(\÷{x-\μ_q}{\σ_q})}^2\right]}\\
@@ -122,7 +122,7 @@ The evidence lower bound (ELBO) for our VAE is given by:
 \begin{equation}
   \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)} - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))]
 \end{equation}
-We want to maximize our data model \(p(\B{x}_n)\), or written including the ELBO:
+We want to maximize our data model \(p(\B{x}_n)\), or written including the ELBO:\@
 \begin{equation}
   p(\B{x}_n) =  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}
                 - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))]
@@ -163,7 +163,7 @@ Therefore it is fair to say that the divergence is called the regularization los
 \subsection{Writing down the complete loss}
 We assume for our encoder:
 \begin{align}
-  q_\φ(\B{z}_n|\B{x}_n) &= \N(\B{z}_n)\μ_\φ(\B{x}_n, \diag(\Sigma_\φ(\B{x}_n)))
+  q_\φ(\B{z}_n|\B{x}_n) &= \N(\B{z}_n|\μ_\φ(\B{x}_n), \diag(\Sigma_\φ(\B{x}_n)))
 \end{align}
 
 \begin{align}
@@ -177,6 +177,24 @@ We assume for our encoder:
   &= \÷{1}{N}\Σ_{n=1}^N (\L^{\t{recon}}_n + \L^{\t{reg}}_n)\\
   &=
 \end{align}
+
+\subsection{The reparametrization trick}
+\subsubsection{Why do we need \( \∇_\φ\L \)?}
+We need the gradient of our loss with respect to the parameters \( \φ\) of our encoder \(q_\φ(\·)\) for backpropagation.
+To update the weights \( \φ\) we need to know their influence on the loss.
+
+\subsubsection{Why can we not compute \( \∇_\φ\L \)?}
+We cannot compute this gradient because we sample from \(q_\φ(\B{z}_n|\B{x}_n)\).
+As we sample from we cannot attribute the effect of this inference step to and of the weights \( \φ\) in \( \μ_\φ(\·)\) or \(\Sigma_\φ(\·)\).
+
+\subsubsection{How does the reparametrization trick solve that problem?}
+The reparametrization trick solves this problem by taking the stochastic non-deterministic sampling operation out of the encoder.
+This uses the special property of normal distribution, that:
+\begin{align}
+  \N(\B{z}_n|\μ_\φ(\B{x}_n), \diag(\Sigma_\φ(\B{x}_n)))
+  &= \diag(\Sigma_\φ(\B{x}_n)) \· \N(0, \1_D) + \μ_\φ(\B{x}_n)
+\end{align}
+The only remaining stochastic process \(\N(0, \1_D)\) is therefore than outside the parameterized model and we can compute the gradient.
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
