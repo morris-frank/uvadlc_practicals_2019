@@ -1,0 +1,143 @@
+\documentclass{article}
+\usepackage[final]{neurips_2019}
+\usepackage{morris}
+
+% Some update to the NIPS template
+\bibpunct{[}{]}{;}{n}{}{,}
+\makeatletter
+\renewcommand{\@noticestring}{Deep Learning, Sommer 2019, Universiteit van Amsterdam}
+\makeatother
+
+\renewcommand{\thesubsubsection}{\alph{subsubsection})}
+
+\title{Assignment 3. Deep Generative Models}
+\author{%
+  Maurice Frank\\
+  11650656\\
+  \href{mailto:maurice.frank@posteo.de}{maurice.frank@posteo.de} \\
+  Code: \href{https://github.com/morris-frank/uvadlc_practicals_2019/tree/master/assignment_2}{github}
+}
+
+\begin{document}
+\maketitle
+
+\section{Variational Auto Encoders}
+We have:
+\begin{description}
+  \item[\(\mathcal{D}={\{\B{x}_n\}}^N_{n=1}\)] the dataset
+  \item[\(\B{x}_n\in{\{0,1\}}^M\)] one datapoint, from Bernoulli distribution
+\end{description}
+
+\subsection{Variational autoencoders vs standard autoencoders}
+Let us first note down the two objectives of the VAE and a standard sparse autoencoder~\cite{doersch2016}, respectively:
+
+\begin{align}
+  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}] &- D_{KL}(q(Z|\B{x}_n)||p(Z))]\\
+  {||D_{AE}(E_{AE}(\B{X})) - \B{X}||}^2 &+ \λ||E_{AE}(\B{X})||_0
+\end{align}
+
+For the sparse autoencoder we use \(D_{AE}, E_{AE}\) for the Decoder model and Encoder model and \(\λ\) is our regularization hyperparameter.
+The main similarity between both is that they have the encoder and decoder pair.
+The encoder encodes the data into a smaller latent space and the decode generates samples from this space back into our datasets space \(X\).
+
+\subsubsection{How do they differ in their main function?}
+We see that both methods vary considerably in their main optimization objective.
+The VAE objective includes modeling the intractable encoding distribution\(p(Z|X)\) through the surrogate \(q(Z|X)\).
+The standard autoencoder on the other side does not actually model the encoding distribution but only has the reconstruction capabilities of those encodings as its objective.
+
+\subsubsection{Is the standard autoencoder a generative model?}
+The standard autoencoder is not a generative model as one cannot sample from the implicit latent space.
+We do have the latent representation and thus can vary the input into the decoder but this does not relate to sampling from the latent manifold of all possible encodings.
+We can sample from the space the encodings live in but as we do not model the actual distribution this is not a generative model.
+
+\subsubsection{Can the VAE be a drop-in replacement for a normal autoencoder?}
+The VAE can be a drop-in replacement for the standard autoencoder in respective applications.
+Autoencoders are used for compression as they can reduce the input data into the smaller informative latent space.
+The VAE does do they same and can be used for the same.
+Further autoencoders can denoise data by mapping the noisy data close to the noise-less data in the latent space.
+Again the VAE can do the same.
+Generally the addition of the VAE is enforcing the continuity of the latent space by introducing \(q(\·)\).
+While this opens up new (see generative) applications it does not restrictive the former.
+
+\subsubsection{Why does VAE generalize better?}
+The standard autoencoder is missing the is not modelling the encoding distribution.
+In the VAE our \(q(Z|X)\) forces the latent space to be continuos.
+As such interpolating in the latent space does correspond to interpolating in the data space.
+During training we therefore build a latent space that is better capable to handling unseen data and can therefore also generalize beyond the trainings data.
+
+\subsection{How to sample from \(p(Z)\)?}
+We sample using ancestral sampling.
+First we sample \(\B{z}_i\sim p(\B{z}_n) = \N(0,\1_D)\).
+We put this sample into the Decoder \(f_\θ(\·)\) to get our parameters for the bernoulli distribution.
+Than we sample each pixel from each bernoulli \(\text{pixel}_m \sim \text{Bern}(\B{x}_n^{(m)}|{f_\θ(\B{z}_n)}_m)\) to get the sample from the joint distribution.
+
+\subsection{Why is the assumption of \(p(Z)\) not restrictive?}
+Our assumption that \(p(Z)\) is a standard-normal distribution does not hinder us from learning a complex manifold for \(X\) as we transform it using \(f_\θ(\·)\).
+Thus the complexity lies in the mapping from latent z-space and x-space.
+
+\subsection{Evaluating \(\log p(\B{x}_n)\)}
+\subsubsection{Approximating using Monte-Carlo}
+We can sample from our distribution of \(\B{z}_n\) to compute the integral for one \(\B{x}_n\):
+\begin{align}
+  \log{p(\B{x}_n)}
+  &= \log \int p(\B{x}_n|\B{z}_n)p(\B{z}_n)\,d\B{z}_n\\
+  &\approx \log \÷{1}{n} \Σ_{i=1}^{n} p(\B{x}_n|\B{z}_i),\quad \B{z}_i\sim p(z)
+\end{align}
+
+\subsubsection{Why is Monte-Carlo integration here inefficient?}
+We sample from \(p(Z)\).
+As we nee the integral for each datapoint this is inefficient with any non trivial dimensionality in Z.
+The precision of our density estimation of \(p(\B{x}_n|\B{z}_n)\) decreases exponentially as the dimension of \(\B{x}_n\) increases.
+As such we would need to increase the number of samples exponentially with higher dimension of \(\B{z}_n\) to keep the estimation precise.
+In the real world the hidden embeddings often has hundreds of dimensions.
+A density dimension that we would have to do for every single input in every inference step is too inefficient to be usable.
+
+\subsection{Kullback-Leibler divergence of Gaussians}
+We assume: \(q = \N(\μ_q, \σ_q^2),\quad p=\N(0,1)\)
+
+\subsubsection{Two examples of KL-divergence}
+Checking with the closed form solution in Section~\ref{sec:kl_closed_form} we see as expected that the divergence is zero for \(\σ_q = 1, \μ_q = 0\) and increases for any deviation from either of those values:
+\begin{align}
+  \t{Big:}&\quad(1 + 10^{5}, 10^{5}) \⇒ D_{\t{KL}}(q||p) = \num{1.0d10}\\
+  \t{Small:}&\quad(1 + 10^{-5}, 10^{-5}) \⇒ D_{\t{KL}}(q||p) = \num{1.49d-10}
+\end{align}
+
+\subsubsection{Closed-form solution of the KL-divergence}
+\label{sec:kl_closed_form}
+\begin{align}
+  q(x) &= \÷{1}{\sqrt{2\π}\σ_q} \exp{\left[-\÷{1}{2}{(\÷{x-\μ_q}{\σ_q})}^2\right]}\\
+  p(x) &= \÷{1}{\sqrt{2\π}} \exp{\left[-\÷{1}{2}x^2\right]}\\
+  D_{\t{KL}}(q||p)
+  &= -\E_{q(x)}\left[ \log{\f{p(x)}{q(x)}} \right]\\
+  &= -\E_{q(x)}\left[ \log{(\÷{1}{\sqrt{2\π}})} -\÷{1}{2}x^2 -\log{(\÷{1}{\sqrt{2\π}})} +\log{\σ_q} +\÷{1}{2}{(\÷{x-\μ_q}{\σ_q})}^2 \right]\\
+  &= -\E_{q(x)}\left[ \÷{1}{2}({\left(\÷{x-\μ_q}{\σ_q}\right)}^2 - x^2)\right] - \E_{q(x)}\left[\log{\σ_q}\right]\\
+  &= -\÷{1}{2}\E_{q(x)}\left[{\left(\÷{x-\μ_q}{\σ_q}\right)}^2 - x^2\right] - \log{\σ_q}\\
+  &= -\÷{1}{2}\left(\÷{1}{\σ_q^2}\E_{q(x)}[{(x-\μ_q)}^2] - \E_{q(x)}[x^2]\right) - \log{\σ_q}\\
+  &= -\÷{1}{2}\left(\÷{\σ_q^2}{\σ_q^2} -\σ_q^2 -\μ_q^2\right) - \log{\σ_q}\\
+  &= \÷{\σ_q^2 + \μ_q^2 - 1}{2} - \log{\σ_q}
+\end{align}
+
+\subsection{Why is ELBO a lower bound?}
+The evidence lower bound (ELBO) for our VAE is given by:
+\begin{equation}
+  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)} - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))]
+\end{equation}
+We want to maximize our data model \(p(\B{x}_n)\), or written including the ELBO:
+\begin{equation}
+  p(\B{x}_n) =  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}
+                - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))]
+                + D_{\t{KL}}(q(Z|\B{x}_n)||p(Z|\B{x}_n))
+\end{equation}
+As KL divergence is strictly \(>0\) we directly see that the ELBO is a lower bound for our actual objective.
+Now the distance from the lower bound to the actual evidence is the divergence of our surrogate approximate posterior \(q(Z|\B{x}_n)\) from the actual posterior \(p(Z|\B{x}_n)\).
+The lower bound always stays a lower bound so maximizing the lower bound does also maximize the actual objective.
+
+\subsection{Why do we optimize the lower bound instead of the log-probability?}
+We must optimize the lower bound as we cannot compute \(D_{\t{KL}}(q(Z|\B{x}_n)||p(Z|\B{x}_n))\).
+
+\subsection{Pushing the lower bound}
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\end{document}
