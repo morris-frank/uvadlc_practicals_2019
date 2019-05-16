@@ -142,10 +142,12 @@ def save_sample(sample, imw, epoch):
 
 
 def main():
+    # general setup
     os.makedirs('./figures', exist_ok=True)
     imw = 28
     device = torch.device(ARGS.device)
-    data = bmnist(batch_size=ARGS.batch_size)[:2]  # ignore test split
+    
+    data = bmnist(batch_size=ARGS.batch_size, download=False)[:2]  # ignore test split
     model = VAE(x_dim=imw**2, z_dim=ARGS.zdim).to(device)
     optimizer = torch.optim.Adam(model.parameters())
 
