@@ -86,7 +86,7 @@ class VAE(nn.Module):
         return sampled_ims, im_means
 
 
-def epoch_iter(model, data, optimizer):
+def epoch_iter(model, data, optimizer, device):
     """
     Perform a single epoch for either the training or validation.
     use model.training to determine if in 'training mode' or not.
@@ -95,7 +95,7 @@ def epoch_iter(model, data, optimizer):
     """
     average_epoch_elbo = []
     for batch in data:
-        batch = batch.view(batch.shape[0], -1)
+        batch = batch.view(batch.shape[0], -1).to(device)
         elbo = model.forward(batch)
 
         if model.training:
@@ -107,17 +107,17 @@ def epoch_iter(model, data, optimizer):
     return np.mean(average_epoch_elbo)
 
 
-def run_epoch(model, data, optimizer):
+def run_epoch(model, data, optimizer, device):
     """
     Run a train and validation epoch and return average elbo for each.
     """
     traindata, valdata = data
 
     model.train()
-    train_elbo = epoch_iter(model, traindata, optimizer)
+    train_elbo = epoch_iter(model, traindata, optimizer, device)
 
     model.eval()
-    val_elbo = epoch_iter(model, valdata, optimizer)
+    val_elbo = epoch_iter(model, valdata, optimizer, device)
 
     return train_elbo, val_elbo
 
@@ -134,13 +134,14 @@ def save_elbo_plot(train_curve, val_curve, filename):
 
 
 def main():
+    device = torch.device(ARGS.device)
     data = bmnist(batch_size=ARGS.batch_size)[:2]  # ignore test split
-    model = VAE(z_dim=ARGS.zdim)
+    model = VAE(z_dim=ARGS.zdim).to(device)
     optimizer = torch.optim.Adam(model.parameters())
 
     train_curve, val_curve = [], []
     for epoch in range(ARGS.epochs):
-        (train_elbo, val_elbo) = run_epoch(model, data, optimizer)
+        (train_elbo, val_elbo) = run_epoch(model, data, optimizer, device=device)
         train_curve.append(train_elbo)
         val_curve.append(val_elbo)
         print(f"[Epoch {epoch}] train elbo: {train_elbo:.4e} val_elbo: {val_elbo:.4e}")
@@ -167,6 +168,8 @@ if __name__ == "__main__":
                         help='dimensionality of latent space')
     parser.add_argument('--batch_size', default=64, type=int,
                         help='Batch size')
+    parser.add_argument('--device', type=str, default="cuda:0",
+                        help="Training device 'cpu' or 'cuda:0'")
 
     ARGS = parser.parse_args()
 
