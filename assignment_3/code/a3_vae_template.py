@@ -147,7 +147,7 @@ def main():
     imw = 28
     device = torch.device(ARGS.device)
 
-    data = bmnist(batch_size=ARGS.batch_size)[:2]  # ignore test split
+    data = bmnist(root=ARGS.data, batch_size=ARGS.batch_size, download=False)[:2]  # ignore test split
     model = VAE(x_dim=imw**2, z_dim=ARGS.zdim).to(device)
     optimizer = torch.optim.Adam(model.parameters())
 
@@ -182,6 +182,8 @@ if __name__ == "__main__":
                         help="Training device 'cpu' or 'cuda:0'")
     parser.add_argument('--samples', type=int, default=16,
                         help="How many samples to sample when we sample.")
+    parser.add_argument('--data', type=str, default='./data',
+                        help="DATA dir root")
 
     ARGS = parser.parse_args()
 
