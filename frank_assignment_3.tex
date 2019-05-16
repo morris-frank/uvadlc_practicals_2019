@@ -120,7 +120,7 @@ Checking with the closed form solution in Section~\ref{sec:kl_closed_form} we se
 \subsection{Why is ELBO a lower bound?}
 The evidence lower bound (ELBO) for our VAE is given by:
 \begin{equation}
-  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)} - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))]
+  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}] - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))
 \end{equation}
 We want to maximize our data model \(p(\B{x}_n)\), or written including the ELBO:\@
 \begin{equation}
@@ -144,6 +144,8 @@ In the first case the likelihood of the trainings data rises meaning we get a be
 The reconstruction gets better.
 In the second case our surrogate gets more similar to the actual encoding which means we improve our embeddings.
 
+%Interestingly this fact does imply our model might behave quite differently to what we would expect.
+
 \subsection{How can we name the parts of the loss of an VAE?}
 We can write the loss of the VAE as the per-sample sum of the \textit{reconstruction} and the \textit{regularizer} loss:
 \begin{align}
@@ -155,10 +157,16 @@ We can write the loss of the VAE as the per-sample sum of the \textit{reconstruc
 As written before \(\L^{\t{recon}}_n\) gives us the negative data likelihood of the input sample \(\B{x}_n\) using its embedding from the encoder \(q_\φ(\·)\).
 In other words this gives us the reconstruction probability of \(\B{x}_n\) using the decoder \(p_\θ(\·)\) under an already set embedding for \(\B{x}_n\), but negative (to get a loss).
 
-As we have an VAE not an standard autoencoder we actually model the distribution \(q_\φ(Z|X)\) to have a generalizing model in which we can interpolate inside the embedding space of \(z\).
-Having the continuos z-space is the models regularization.
-Our metric for how good our projection from \(x\) to \(z\) is, is the KL divergence from the actual \(p(Z|X)\).
-Therefore it is fair to say that the divergence is called the regularization loss.
+Our second objective wants to minimize the divergence between \(q_\φ(Z|\B{x}_n)\) and \(p_\θ(Z)\).
+Now that means that every posterior of the encoders input wants to be like the distribution of our latent embeddings \(Z\).
+Of course this is impossible as in the case of no divergence all posteriors would be the same.
+If the model wants to have reconstruction capabilities while minimizing the divergence of the embedding posteriors it is best to map similar inputs to similar posteriors as that allows them to be larger, hence less diverged from the \(p(Z)\).
+Further this will lead to a distribution of posteriors as such that:
+\begin{equation}
+  D_{\t{KL}}\left(\Σ_n q_\φ(Z|\B{x}_n)||p_\θ(Z)\right) \approx 0
+\end{equation}
+This is exactly what we want as we thus make a partition of the embedding manifold based on latent feature similarity (in the case of MNIST, same number are close).
+
 
 \subsection{Writing down the complete loss}
 We assume for our encoder:
