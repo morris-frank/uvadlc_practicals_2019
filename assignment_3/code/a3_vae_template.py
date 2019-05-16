@@ -53,12 +53,14 @@ class Decoder(nn.Module):
 
 class VAE(nn.Module):
 
-    def __init__(self, x_dim, hidden_dim=500, z_dim=20):
+    def __init__(self, x_dim, hidden_dim=500, z_dim=20, device='cpu'):
         super().__init__()
 
         self.z_dim = z_dim
         self.encoder = Encoder(x_dim, hidden_dim, z_dim)
         self.decoder = Decoder(x_dim, hidden_dim, z_dim)
+        self.device = device
+        self.to(device)
 
     def forward(self, x):
         """
@@ -66,7 +68,7 @@ class VAE(nn.Module):
         negative average elbo for the given batch.
         """
         μ, σ = self.encoder(x)
-        ε = torch.zeros(μ.shape).normal_()
+        ε = torch.zeros(μ.shape, device=self.device).normal_()
         z = σ * ε + μ
 
         y = self.decoder(z)
@@ -82,9 +84,9 @@ class VAE(nn.Module):
         (from bernoulli) and the means for these bernoullis (as these are
         used to plot the data manifold).
         """
-        ε = torch.zeros(n_samples, self.z_dim).normal_()
+        ε = torch.zeros(n_samples, self.z_dim, device=self.device).normal_()
         μ = self.decoder(ε)
-        img = torch.rand_like(μ).cpu() > μ.cpu()
+        img = torch.rand_like(μ, device=self.device).cpu() > μ.cpu()
         return img, μ
 
 
@@ -148,7 +150,7 @@ def main():
     device = torch.device(ARGS.device)
 
     data = bmnist(root=ARGS.data, batch_size=ARGS.batch_size, download=False)[:2]  # ignore test split
-    model = VAE(x_dim=imw**2, z_dim=ARGS.zdim).to(device)
+    model = VAE(x_dim=imw**2, z_dim=ARGS.zdim, device=device)
     optimizer = torch.optim.Adam(model.parameters())
 
     train_curve, val_curve = [], []
