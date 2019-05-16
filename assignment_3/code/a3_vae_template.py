@@ -3,8 +3,10 @@ import argparse
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+import matplotlib.image as mim
 from torchvision.utils import make_grid
 import numpy as np
+import os
 
 from datasets.bmnist import bmnist
 
@@ -51,7 +53,7 @@ class Decoder(nn.Module):
 
 class VAE(nn.Module):
 
-    def __init__(self, x_dim=784, hidden_dim=500, z_dim=20):
+    def __init__(self, x_dim, hidden_dim=500, z_dim=20):
         super().__init__()
 
         self.z_dim = z_dim
@@ -80,10 +82,10 @@ class VAE(nn.Module):
         (from bernoulli) and the means for these bernoullis (as these are
         used to plot the data manifold).
         """
-        sampled_ims, im_means = None, None
-        raise NotImplementedError()
-
-        return sampled_ims, im_means
+        ε = torch.zeros(n_samples, self.z_dim).normal_()
+        μ = self.decoder(ε)
+        img = torch.rand_like(μ).cpu() > μ.cpu()
+        return img, μ
 
 
 def epoch_iter(model, data, optimizer, device):
@@ -133,10 +135,18 @@ def save_elbo_plot(train_curve, val_curve, filename):
     plt.savefig(filename)
 
 
+def save_sample(sample, imw, epoch):
+    sample = sample.view(-1, 1, imw, imw)
+    sample = make_grid(sample).numpy().astype(np.float).transpose(1, 2, 0)
+    mim.imsave(f"figures/vae_sample_{epoch}.png", sample)
+
+
 def main():
+    os.makedirs('./figures', exist_ok=True)
+    imw = 28
     device = torch.device(ARGS.device)
     data = bmnist(batch_size=ARGS.batch_size)[:2]  # ignore test split
-    model = VAE(z_dim=ARGS.zdim).to(device)
+    model = VAE(x_dim=imw**2, z_dim=ARGS.zdim).to(device)
     optimizer = torch.optim.Adam(model.parameters())
 
     train_curve, val_curve = [], []
@@ -146,10 +156,8 @@ def main():
         val_curve.append(val_elbo)
         print(f"[Epoch {epoch}] train elbo: {train_elbo:.4e} val_elbo: {val_elbo:.4e}")
 
-        # --------------------------------------------------------------------
-        #  Add functionality to plot samples from model during training.
-        #  You can use the make_grid functioanlity that is already imported.
-        # --------------------------------------------------------------------
+        sample, _ = model.sample(ARGS.samples)
+        save_sample(sample, imw, epoch)
 
     # --------------------------------------------------------------------
     #  Add functionality to plot plot the learned data manifold after
@@ -170,6 +178,8 @@ if __name__ == "__main__":
                         help='Batch size')
     parser.add_argument('--device', type=str, default="cuda:0",
                         help="Training device 'cpu' or 'cuda:0'")
+    parser.add_argument('--samples', type=int, default=16,
+                        help="How many samples to sample when we sample.")
 
     ARGS = parser.parse_args()
 
