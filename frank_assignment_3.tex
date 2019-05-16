@@ -204,6 +204,56 @@ This uses the special property of normal distribution, that:
 \end{align}
 The only remaining stochastic process \(\N(0, \1_D)\) is therefore than outside the parameterized model and we can compute the gradient.
 
+\section{Generative Adversarial Networks}
+We have:
+\begin{description}
+  \item[\(D(\·)\)] our discriminator function/network
+  \item[\(G(\·)\)] our generator function/network
+  \item[\(p(\B{z})\)] the noise distribution, here \(\sim \N(0,\1_d)\)
+  \item[\(\mathcal{D} = \…, i_i,\… \)] dataset of images, each \(i_i \∈ \ℝ^{h\×w}\)
+\end{description}
+and our GAN objective:
+\begin{equation}
+  \min_G \max_D V(D, G) = \min_G \max_D \E_{p_{\t{data}}(\B{x})}[\log D(X)] + \E_{p_z(\B{z})}[\log(1 - D(G(Z)))]
+\end{equation}
+
+\subsection{Inputs and outputs of \(D(\·)\) and \(G(\·)\)}
+For the Generator we have a randomly sampled input of size \(d\) and an output in image size.
+\begin{align}
+  \t{input}_G &\sim p(\B{z}) = \N(0,\1_d) \∈ \ℝ^{D}\\
+  \t{output}_G &\∈ \ℝ^{h\·w}
+\end{align}
+
+For the Discriminator we have an image sized input and a single output.
+\begin{align}
+  \t{input}_D &\∈ \ℝ^{h\·w}\\
+  \t{output}_D &\∈ \ℝ
+\end{align}
+
+\subsection{What are the parts of the GANs objective?}
+The left part \(\E_{p_{\t{data}}(\B{x})}[\log D(X)]\) is the data likelihood of the trainings data under the discriminator. Basically it maximizes the discriminators output for samples in the ground truth data set.
+
+The right part \(\E_{p_z(\B{z})}[\log(1 - D(G(Z)))]\) gives the inverse score of the discriminator for sampled \(\B{z}\) that were put through the generator. The generator wants to minimize this as than outputs are similar for \(p_{\t{data}}\) and \(p_z\). The discriminator wants to maximize to have reciprocal outputs for the two distributions.
+
+\subsection{How does a converged objective look like?}
+If training is converged than the distribution of generated samples is equal to the trainings set:
+\begin{equation}
+  p_{\t{data}}(\B{x}) = G(\B{z})\quad \B{z}\sim p_z(\B{z})
+\end{equation}
+
+and the discriminator is as good as random:
+\begin{align}
+  \E_{p_{\t{data}}(\B{x})}[D(\B{x})] &= \E_{p_z(\B{z})}[D(G(\B{z}))] = \÷{1}{2}\\
+  &\⇒\\
+  V(D,G) &= \log\÷{1}{2} + \log\÷{1}{2}
+\end{align}
+
+\subsection{Why can \(\log(1 - D(G(Z)))\) be problematic?}
+In the beginning \(G(\·)\) and \(D(\·)\) are shit.
+But than in early training it is easier for the discriminator to differ between real and fake than it is for the generator to fool it.
+Hence our left side objective is \(\sim 1\) early on.
+This saturating effect makes backpropagation difficult as we need movement in the objective for it.
+
 \bibliographystyle{unsrtnat}
 \bibliography{references}
 

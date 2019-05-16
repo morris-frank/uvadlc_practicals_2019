@@ -169,7 +169,8 @@ def main():
     #  functionality that is already imported.
     # --------------------------------------------------------------------
 
-    save_elbo_plot(train_curve, val_curve, 'figures/elbo.pdf')
+    np.save('curves.npy', {'train': train_curve, 'val': val_curve})
+    #save_elbo_plot(train_curve, val_curve, 'figures/elbo.pdf')
 
 
 if __name__ == "__main__":
