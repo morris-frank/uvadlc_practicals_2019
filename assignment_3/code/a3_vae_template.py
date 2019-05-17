@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mim
 from torchvision.utils import make_grid
 import numpy as np
+import math
 import os
 
 from datasets.bmnist import bmnist
@@ -85,9 +86,20 @@ class VAE(nn.Module):
         used to plot the data manifold).
         """
         ε = torch.zeros(n_samples, self.z_dim, device=self.device).normal_()
-        μ = self.decoder(ε)
+        with torch.no_grad():
+            μ = self.decoder(ε)
         img = torch.rand_like(μ, device=self.device).cpu() > μ.cpu()
         return img, μ
+
+    def manifold_sample(self, n_samples):
+        n = int(math.sqrt(n_samples))
+        xy = torch.zeros(n**2, 2, device=self.device)
+        xy[:, 0] = torch.arange(0.01, n, 1/n, device=self.device) % 1
+        xy[:, 1] = (torch.arange(0.01, n**2, 1, device=self.device) / n).float() / n
+        z = torch.erfinv(2 * xy - 1) * math.sqrt(2)
+        with torch.no_grad():
+            μ = self.decoder(z)
+        return μ
 
 
 def epoch_iter(model, data, optimizer, device):
@@ -137,10 +149,10 @@ def save_elbo_plot(train_curve, val_curve, filename):
     plt.savefig(filename)
 
 
-def save_sample(sample, imw, epoch):
+def save_sample(sample, imw, epoch, nrow=8, slug='sample'):
     sample = sample.view(-1, 1, imw, imw)
-    sample = make_grid(sample).numpy().astype(np.float).transpose(1, 2, 0)
-    mim.imsave(f"figures/vae_sample_{epoch}.png", sample)
+    sample = make_grid(sample, nrow=nrow).numpy().astype(np.float).transpose(1, 2, 0)
+    mim.imsave(f"figures/vae_{slug}_{epoch}.png", sample)
 
 
 def main():
@@ -155,22 +167,22 @@ def main():
 
     train_curve, val_curve = [], []
     for epoch in range(ARGS.epochs):
+        exit()
+
         (train_elbo, val_elbo) = run_epoch(model, data, optimizer, device=device)
         train_curve.append(train_elbo)
         val_curve.append(val_elbo)
         print(f"[Epoch {epoch}] train elbo: {train_elbo:.4e} val_elbo: {val_elbo:.4e}")
 
-        sample, _ = model.sample(ARGS.samples)
-        save_sample(sample, imw, epoch)
+        _, μ_sample = model.sample(ARGS.samples)
+        save_sample(μ_sample, imw, epoch)
 
-    # --------------------------------------------------------------------
-    #  Add functionality to plot plot the learned data manifold after
-    #  if required (i.e., if zdim == 2). You can use the make_grid
-    #  functionality that is already imported.
-    # --------------------------------------------------------------------
+        if ARGS.zdim == 2:
+            manifold = model.manifold_sample(100)
+            save_sample(manifold, imw, epoch, 10, 'manifold')
 
     np.save('curves.npy', {'train': train_curve, 'val': val_curve})
-    #save_elbo_plot(train_curve, val_curve, 'figures/elbo.pdf')
+    # save_elbo_plot(train_curve, val_curve, 'figures/elbo.pdf')
 
 
 if __name__ == "__main__":
