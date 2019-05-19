@@ -167,8 +167,6 @@ def main():
 
     train_curve, val_curve = [], []
     for epoch in range(ARGS.epochs):
-        exit()
-
         (train_elbo, val_elbo) = run_epoch(model, data, optimizer, device=device)
         train_curve.append(train_elbo)
         val_curve.append(val_elbo)
