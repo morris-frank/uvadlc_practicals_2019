@@ -8,6 +8,7 @@ from torchvision.utils import make_grid
 import numpy as np
 import math
 import os
+import scipy.stats as stats
 
 from datasets.bmnist import bmnist
 
@@ -93,10 +94,12 @@ class VAE(nn.Module):
 
     def manifold_sample(self, n_samples):
         n = int(math.sqrt(n_samples))
-        xy = torch.zeros(n**2, 2, device=self.device)
-        xy[:, 0] = torch.arange(0.01, n, 1/n, device=self.device) % 1
-        xy[:, 1] = (torch.arange(0.01, n**2, 1, device=self.device) / n).float() / n
-        z = torch.erfinv(2 * xy - 1) * math.sqrt(2)
+
+        xy = np.zeros((n**2, 2), np.float32)
+        xy[:, 0] = np.arange(0, n**2, 1) // n / n + 1e-8
+        xy[:, 1] = np.arange(0, n, 1/n) % 1 + 1e-8
+
+        z = torch.tensor(stats.norm.ppf(xy), device=self.device, dtype=torch.float)
         with torch.no_grad():
             μ = self.decoder(z)
         return μ
@@ -150,7 +153,7 @@ def save_elbo_plot(train_curve, val_curve, filename):
 
 
 def save_sample(sample, imw, epoch, nrow=8, slug='sample'):
-    sample = sample.view(-1, 1, imw, imw)
+    sample = sample.view(-1, 1, imw, imw).cpu()
     sample = make_grid(sample, nrow=nrow).numpy().astype(np.float).transpose(1, 2, 0)
     mim.imsave(f"figures/vae_{slug}_{epoch}.png", sample)
 
@@ -167,6 +170,8 @@ def main():
 
     train_curve, val_curve = [], []
     for epoch in range(ARGS.epochs):
+        manifold = model.manifold_sample(400)
+
         (train_elbo, val_elbo) = run_epoch(model, data, optimizer, device=device)
         train_curve.append(train_elbo)
         val_curve.append(val_elbo)
@@ -176,8 +181,8 @@ def main():
         save_sample(μ_sample, imw, epoch)
 
         if ARGS.zdim == 2:
-            manifold = model.manifold_sample(100)
-            save_sample(manifold, imw, epoch, 10, 'manifold')
+            manifold = model.manifold_sample(400)
+            save_sample(manifold, imw, epoch, 20, 'manifold')
 
     np.save('curves.npy', {'train': train_curve, 'val': val_curve})
     # save_elbo_plot(train_curve, val_curve, 'figures/elbo.pdf')
