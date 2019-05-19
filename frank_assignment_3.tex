@@ -157,8 +157,8 @@ We can write the loss of the VAE as the per-sample sum of the \textit{reconstruc
 As written before \(\L^{\t{recon}}_n\) gives us the negative data likelihood of the input sample \(\B{x}_n\) using its embedding from the encoder \(q_\φ(\·)\).
 In other words this gives us the reconstruction probability of \(\B{x}_n\) using the decoder \(p_\θ(\·)\) under an already set embedding for \(\B{x}_n\), but negative (to get a loss).
 
-Our second objective wants to minimize the divergence between \(q_\φ(Z|\B{x}_n)\) and \(p_\θ(Z)\).
-Now that means that every posterior of the encoders input wants to be like the distribution of our latent embeddings \(Z\).
+Our second objective wants to minimize the divergence of \(q_\φ(Z|\B{x}_n)\) with respect to \(p_\θ(Z)\).
+Now that means that every posterior of the encoders input wants to be similar to the distribution of our latent embeddings \(Z\).
 Of course this is impossible as in the case of no divergence all posteriors would be the same.
 If the model wants to have reconstruction capabilities while minimizing the divergence of the embedding posteriors it is best to map similar inputs to similar posteriors as that allows them to be larger, hence less diverged from the \(p(Z)\).
 Further this will lead to a distribution of posteriors as such that:
@@ -236,16 +236,17 @@ The left part \(\E_{p_{\t{data}}(\B{x})}[\log D(X)]\) is the data likelihood of 
 The right part \(\E_{p_z(\B{z})}[\log(1 - D(G(Z)))]\) gives the inverse score of the discriminator for sampled \(\B{z}\) that were put through the generator. The generator wants to minimize this as than outputs are similar for \(p_{\t{data}}\) and \(p_z\). The discriminator wants to maximize to have reciprocal outputs for the two distributions.
 
 \subsection{How does a converged objective look like?}
-If training is converged than the distribution of generated samples is equal to the trainings set:
+If training is converged than the generator produces perfect samples which mean that the distribution of generated samples is equal to the trainings set:
 \begin{equation}
   p_{\t{data}}(\B{x}) = G(\B{z})\quad \B{z}\sim p_z(\B{z})
 \end{equation}
 
-and the discriminator is as good as random:
+at that point a perfectly discriminator is no different from randomness as it is impossible ot distinguish the two datasets:
 \begin{align}
   \E_{p_{\t{data}}(\B{x})}[D(\B{x})] &= \E_{p_z(\B{z})}[D(G(\B{z}))] = \÷{1}{2}\\
   &\⇒\\
-  V(D,G) &= \log\÷{1}{2} + \log\÷{1}{2}
+  V(D,G) &= \log \÷{1}{2} + \log \÷{1}{2}\\
+  &= -\log{4}
 \end{align}
 
 \subsection{Why can \(\log(1 - D(G(Z)))\) be problematic?}

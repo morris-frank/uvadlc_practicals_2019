@@ -9,46 +9,41 @@ from torchvision import datasets
 
 
 class Generator(nn.Module):
-    def __init__(self):
+    def __init__(self, latent_dim, x_dim=784):
         super(Generator, self).__init__()
 
-        # Construct generator. You are free to experiment with your model,
-        # but the following is a good start:
-        #   Linear args.latent_dim -> 128
-        #   LeakyReLU(0.2)
-        #   Linear 128 -> 256
-        #   Bnorm
-        #   LeakyReLU(0.2)
-        #   Linear 256 -> 512
-        #   Bnorm
-        #   LeakyReLU(0.2)
-        #   Linear 512 -> 1024
-        #   Bnorm
-        #   LeakyReLU(0.2)
-        #   Linear 1024 -> 768
-        #   Output non-linearity
+        self.G = nn.Sequential(
+            nn.Linear(latent_dim, 128),
+            nn.LeakyReLU(0.2),
+            nn.Linear(128, 128 * 2),
+            nn.BatchNorm1d(),
+            nn.LeakyReLU(0.2),
+            nn.Linear(128 * 2, 128 * 4),
+            nn.BatchNorm1d(),
+            nn.LeakyReLU(0.2),
+            nn.Linear(128 * 4, x_dim),
+            nn.Sigmoid()
+        )
 
     def forward(self, z):
-        # Generate images from z
-        pass
+        return self.G(z)
 
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, x_dim=784):
         super(Discriminator, self).__init__()
 
-        # Construct distriminator. You are free to experiment with your model,
-        # but the following is a good start:
-        #   Linear 784 -> 512
-        #   LeakyReLU(0.2)
-        #   Linear 512 -> 256
-        #   LeakyReLU(0.2)
-        #   Linear 256 -> 1
-        #   Output non-linearity
+        self.D = nn.Sequential(
+            nn.Linear(x_dim, 512),
+            nn.LeakyReLU(0.2),
+            nn.Linear(512, 256),
+            nn.LeakyReLU(0.2),
+            nn.Linear(256, 1),
+            nn.Sigmoid()
+        )
 
     def forward(self, img):
-        # return discriminator score for img
-        pass
+        return self.D(img)
 
 
 def train(dataloader, discriminator, generator, optimizer_G, optimizer_D):
@@ -91,7 +86,7 @@ def main():
         batch_size=args.batch_size, shuffle=True)
 
     # Initialize models and optimizers
-    generator = Generator()
+    generator = Generator(latent_dim=args.latent_dim)
     discriminator = Discriminator()
     optimizer_G = torch.optim.Adam(generator.parameters(), lr=args.lr)
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=args.lr)
