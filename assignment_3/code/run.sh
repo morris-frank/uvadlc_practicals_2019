@@ -26,6 +26,15 @@ module load NCCL/2.0.5-CUDA-9.0.176
 module load matplotlib/2.1.1-foss-2017b-Python-3.6.3
 export LD_LIBRARY_PATH=/hpc/eb/Debian9/cuDNN/7.1-CUDA-8.0.44-GCCcore-5.4.0/lib64:$LD_LIBRARY_PATH" > run.job
 
-echo "srun python3 a3_vae_template.py --zdim=2 --data=${datasets}" >> run.job
+if [[ $* == *--vae* ]]; then
+    echo "Running VAE with big encoding"
+    echo "srun python3 a3_vae_template.py --zdim=2 --data=${datasets}" >> run.job
+elif [[ $* == *--manifold_vae* ]]; then
+    echo "Running VAE with 2-d encoding"
+    echo "srun python3 a3_vae_template.py --zdim=2 --data=${datasets}" >> run.job
+elif [[ $* == *--gan* ]]; then
+    echo "Running GAN"
+    echo "srun python3 a3_vae_template.py --zdim=2 --data=${datasets}" >> run.job
+fi
 
 sbatch run.job
