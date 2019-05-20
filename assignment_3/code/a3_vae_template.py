@@ -179,8 +179,7 @@ def main():
             manifold = model.manifold_sample(20)
             save_sample(manifold, imw, epoch, 20, 'manifold')
 
-    np.save('curves.npy', {'train': train_curve, 'val': val_curve})
-    # save_elbo_plot(train_curve, val_curve, 'figures/elbo.pdf')
+    torch.save({'train': train_curve, 'val': val_curve}, f"vae_{ARGS.zdim}_curves.pt")
 
 
 if __name__ == "__main__":
@@ -189,7 +188,7 @@ if __name__ == "__main__":
                         help='max number of epochs')
     parser.add_argument('--zdim', default=20, type=int,
                         help='dimensionality of latent space')
-    parser.add_argument('--batch_size', default=64, type=int,
+    parser.add_argument('--batch_size', default=128, type=int,
                         help='Batch size')
     parser.add_argument('--device', type=str, default="cuda:0",
                         help="Training device 'cpu' or 'cuda:0'")
