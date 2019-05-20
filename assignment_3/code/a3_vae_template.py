@@ -70,7 +70,7 @@ class VAE(nn.Module):
         negative average elbo for the given batch.
         """
         μ, σ = self.encoder(x)
-        ε = torch.zeros(μ.shape, device=self.device).normal_()
+        ε = torch.randn_like(μ, device=self.device)
         z = σ * ε + μ
 
         y = self.decoder(z)
@@ -92,12 +92,9 @@ class VAE(nn.Module):
         img = torch.rand_like(μ, device=self.device).cpu() > μ.cpu()
         return img, μ
 
-    def manifold_sample(self, n_samples):
-        n = int(math.sqrt(n_samples))
-
-        xy = np.zeros((n**2, 2), np.float32)
-        xy[:, 0] = np.arange(0, n**2, 1) // n / n + 1e-8
-        xy[:, 1] = np.arange(0, n, 1/n) % 1 + 1e-8
+    def manifold_sample(self, n):
+        xy = np.mgrid[0:n, 0:n].reshape((2, n**2)) / (n - 1)
+        xy = (xy + 1e-4) * (1-1e-4)
 
         z = torch.tensor(stats.norm.ppf(xy), device=self.device, dtype=torch.float)
         with torch.no_grad():
@@ -170,8 +167,6 @@ def main():
 
     train_curve, val_curve = [], []
     for epoch in range(ARGS.epochs):
-        manifold = model.manifold_sample(400)
-
         (train_elbo, val_elbo) = run_epoch(model, data, optimizer, device=device)
         train_curve.append(train_elbo)
         val_curve.append(val_elbo)
@@ -181,7 +176,7 @@ def main():
         save_sample(μ_sample, imw, epoch)
 
         if ARGS.zdim == 2:
-            manifold = model.manifold_sample(400)
+            manifold = model.manifold_sample(20)
             save_sample(manifold, imw, epoch, 20, 'manifold')
 
     np.save('curves.npy', {'train': train_curve, 'val': val_curve})
