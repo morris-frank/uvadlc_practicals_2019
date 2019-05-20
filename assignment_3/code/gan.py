@@ -29,6 +29,7 @@ class Generator(nn.Module):
             nn.Linear(h * 8, x_dim),
             nn.Tanh()
         )
+        self.to(device)
 
     def forward(self, z):
         return self.G(z)
@@ -39,7 +40,7 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, x_dim=784, h=128):
+    def __init__(self, x_dim=784, h=128, device=None):
         super(Discriminator, self).__init__()
 
         self.D = nn.Sequential(
@@ -50,6 +51,7 @@ class Discriminator(nn.Module):
             nn.Linear(h * 2, 1),
             nn.Sigmoid()
         )
+        self.to(device)
 
     def forward(self, img):
         return self.D(img)
@@ -97,7 +99,6 @@ def train(dataloader, discriminator, generator, optimizer_G, optimizer_D, device
     torch.save({'G': losses_g, 'D': losses_d}, 'gan_curves.pt')
 
 
-
 def main():
     # Create output image directory
     os.makedirs('figures', exist_ok=True)
@@ -113,7 +114,7 @@ def main():
 
     # Initialize models and optimizers
     generator = Generator(latent_dim=ARGS.latent_dim, device=device)
-    discriminator = Discriminator()
+    discriminator = Discriminator(device=device)
     optimizer_G = torch.optim.Adam(generator.parameters(), lr=ARGS.lr)
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=ARGS.lr)
 
