@@ -6,11 +6,13 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
 from torchvision import datasets
+from statistics import mean
 
 
 class Generator(nn.Module):
-    def __init__(self, latent_dim, x_dim=784, h=128):
+    def __init__(self, latent_dim, x_dim=784, h=128, device=None):
         super(Generator, self).__init__()
+        self.device = device
         self.latent_dim = latent_dim
         self.G = nn.Sequential(
             nn.Linear(self.latent_dim, h),
@@ -31,6 +33,10 @@ class Generator(nn.Module):
     def forward(self, z):
         return self.G(z)
 
+    def sample(self, bs):
+        z = torch.randn((bs, self.latent_dim), device=self.device)
+        return self.forward(z)
+
 
 class Discriminator(nn.Module):
     def __init__(self, x_dim=784, h=128):
@@ -50,45 +56,46 @@ class Discriminator(nn.Module):
 
 
 def train(dataloader, discriminator, generator, optimizer_G, optimizer_D, device):
+    losses_d, losses_g = [], []
     for epoch in range(ARGS.n_epochs):
+        _losses_d, _losses_g = [], []
         for i, (x, _) in enumerate(dataloader):
-            bs = x.shape[0]
+            bs, _, imw, imh = x.shape
             x = x.view(bs, -1).to(device)
 
             # Train Generator
             # ---------------
-            z = torch.randn((bs, generator.latent_dim))
-            g_z = generator(z)
+            g_z = generator.sample(bs)
             d_g_z = torch.log(discriminator(g_z))
 
             optimizer_G.zero_grad()
             loss_g = -torch.mean(d_g_z)
             loss_g.backward()
+            _losses_g.append(loss_g.item())
             optimizer_G.step()
 
             # Train Discriminator
             # -------------------
             d_x = torch.log(discriminator(x))
-            z = torch.randn((bs, generator.latent_dim))
-            g_z = generator(z)
+            g_z = generator.sample(bs)
             d_g_z = torch.log(1 - discriminator(g_z))
 
             optimizer_D.zero_grad()
             loss_d = - torch.mean(d_x) - torch.mean(d_g_z)
             loss_d.backward()
+            _losses_d.append(loss_d.item())
             optimizer_D.step()
 
             # Save Images
             # -----------
             batches_done = epoch * len(dataloader) + i
             if batches_done % ARGS.save_interval == 0:
-                # You can use the function save_image(Tensor (shape Bx1x28x28),
-                # filename, number of rows, normalize) to save the generated
-                # images, e.g.:
-                # save_image(gen_imgs[:25],
-                #            'images/{}.png'.format(batches_done),
-                #            nrow=5, normalize=True)
-                pass
+                imgs = generator.sample(25).detach().view(25, 1, imw, imh)
+                save_image(imgs, f"figures/gan_{batches_done}.png", nrow=5, normalize=True)
+        losses_d.append(mean(_losses_d))
+        losses_g.append(mean(_losses_g))
+    torch.save({'G': losses_g, 'D': losses_d}, 'gan_curves.pt')
+
 
 
 def main():
@@ -105,7 +112,7 @@ def main():
         batch_size=ARGS.batch_size, shuffle=True)
 
     # Initialize models and optimizers
-    generator = Generator(latent_dim=ARGS.latent_dim)
+    generator = Generator(latent_dim=ARGS.latent_dim, device=device)
     discriminator = Discriminator()
     optimizer_G = torch.optim.Adam(generator.parameters(), lr=ARGS.lr)
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=ARGS.lr)
@@ -128,7 +135,7 @@ if __name__ == "__main__":
                         help='learning rate')
     parser.add_argument('--latent_dim', type=int, default=100,
                         help='dimensionality of the latent space')
-    parser.add_argument('--save_interval', type=int, default=500,
+    parser.add_argument('--save_interval', type=int, default=1,
                         help='save every SAVE_INTERVAL iterations')
     parser.add_argument('--device', type=str, default="cuda:0",
                         help="Training device 'cpu' or 'cuda:0'")
