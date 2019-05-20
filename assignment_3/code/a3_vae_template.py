@@ -93,7 +93,7 @@ class VAE(nn.Module):
         return img, μ
 
     def manifold_sample(self, n):
-        xy = np.mgrid[0:n, 0:n].reshape((2, n**2)) / (n - 1)
+        xy = np.mgrid[0:n, 0:n].reshape((2, n**2)).T / (n - 1)
         xy = (xy + 1e-4) * (1-1e-4)
 
         z = torch.tensor(stats.norm.ppf(xy), device=self.device, dtype=torch.float)
