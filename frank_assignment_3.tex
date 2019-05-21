@@ -21,8 +21,6 @@
 \begin{document}
 \maketitle
 
-\tableofcontents
-
 \section{Variational Auto Encoders}
 We have:
 \begin{description}
@@ -152,7 +150,7 @@ In the second case our surrogate gets more similar to the actual encoding which 
 We can write the loss of the VAE as the per-sample sum of the \textit{reconstruction} and the \textit{regularizer} loss:
 \begin{align}
   \L^{\t{recon}}_n &= - \E_{q_\φ(z|\B{x}_n)}[\log p_\θ(\B{x}_n|Z)]\\
-  \L^{\t{ref}}_n &= D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))\\
+  \L^{\t{reg}}_n &= D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))\\
   \L &= \÷{1}{N}\Σ_{n=1}^N (\L^{\t{recon}}_n + \L^{\t{reg}}_n)
 \end{align}
 
@@ -180,13 +178,14 @@ We assume for our encoder:
   \L^{\t{recon}}_n
   &= -\E_{q_\φ(z|\B{x}_n)}[\log p_\θ(\B{x}_n|Z)]\\
   &\approx -\log p_\θ(\B{x}_n|\B{z}_n)\quad \t{with } \B{z}_n\sim q_\φ (Z|\B{x}_n)\\
-  \L^{\t{ref}}_n
+  \L^{\t{reg}}_n
   &= D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))\\
   &= \÷{{\Sigma_\φ(\B{x}_n)}^2 + {\μ_\φ(\B{x}_n)}^2 -1}{2} -\log \Sigma_\φ(\B{x}_n)\\
   \L
   &= \÷{1}{N}\Σ_{n=1}^N (\L^{\t{recon}}_n + \L^{\t{reg}}_n)\\
   &=
 \end{align}
+\B{TODO: FiNISH this and make loss multivariate}
 
 \subsection{The reparametrization trick}
 \subsubsection{Why do we need \( \∇_\φ\L \)?}
@@ -289,7 +288,7 @@ If training is converged than the generator produces perfect samples which mean 
   p_{\t{data}}(\B{x}) = G(\B{z})\quad \B{z}\sim p_z(\B{z})
 \end{equation}
 
-at that point a perfectly discriminator is no different from randomness as it is impossible ot distinguish the two datasets:
+at that point a perfectly discriminator is no different from randomness as it is impossible to distinguish the two datasets:
 \begin{align}
   \E_{p_{\t{data}}(\B{x})}[D(\B{x})] &= \E_{p_z(\B{z})}[D(G(\B{z}))] = \÷{1}{2}\\
   &\⇒\\
@@ -305,8 +304,8 @@ This saturating effect makes backpropagation for the generator difficult with th
 The solution to this problem is fairly simple.
 We separate the two objectives into:
 \begin{align}
-  \min_D& -\E_{p_{\t{data}}(\B{x})}[\log D(X)] -\E_{p_z(\B{z})}[\log(1 - D(G(Z)))] \\
-  \min_G&  -\E_{p_z(\B{z})}[\log(D(G(Z)))]
+  \L_D &= -\E_{p_{\t{data}}(\B{x})}[\log D(X)] -\E_{p_z(\B{z})}[\log(1 - D(G(Z)))] \\
+  \L_G &=  -\E_{p_z(\B{z})}[\log(D(G(Z)))]
 \end{align}
 With the changed objective for the generator we averted this problem and as we will update the two models consecutively its is not a problem that we formulated separate objectives.
 
