@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import numpy as np
 from datasets.mnist import mnist
 import os
+from math import *
 from torchvision.utils import make_grid
 
 
@@ -31,14 +32,15 @@ def sample_prior(size):
     return sample
 
 
-def get_mask():
-    mask = np.zeros((28, 28), dtype='float32')
-    for i in range(28):
-        for j in range(28):
+def get_mask(size=784):
+    w = int(sqrt(size))
+    mask = np.zeros((w, w), dtype='float32')
+    for i in range(w):
+        for j in range(w):
             if (i + j) % 2 == 0:
                 mask[i, j] = 1
 
-    mask = mask.reshape(1, 28*28)
+    mask = mask.reshape(1, w*w)
     mask = torch.from_numpy(mask)
 
     return mask
@@ -51,12 +53,16 @@ class Coupling(torch.nn.Module):
 
         # Assigns mask to self.mask and creates reference for pytorch.
         self.register_buffer('mask', mask)
-
+        self.c_in = c_in
         # Create shared architecture to generate both the translation and
         # scale variables.
         # Suggestion: Linear ReLU Linear ReLU Linear.
         self.nn = torch.nn.Sequential(
-            None
+            nn.Linear(c_in, n_hidden),
+            nn.ReLU(),
+            nn.Linear(n_hidden, n_hidden),
+            nn.ReLU(),
+            nn.Linear(n_hidden, 2 * c_in)  # 2× for s and t
             )
 
         # The nn should be initialized such that the weights of the last layer
@@ -73,13 +79,17 @@ class Coupling(torch.nn.Module):
         # NOTE: For stability, it is advised to model the scale via:
         # log_scale = tanh(h), where h is the scale-output
         # from the NN.
+        s, t = self.nn(self.mask * z).split(self.c_in)
+        s = torch.tanh(s)
 
         if not reverse:
-            raise NotImplementedError
+            y = self.mask * z + (1 - self.mask) * (z * torch.exp(s) + t)
+            ldj = ldj * torch.abs(torch.exp(s.sum(dim=1)))
         else:
-            raise NotImplementedError
+            y = self.mask * z + (1 - self.mask) * (z - t) * torch.exp(-s)
+            ldj = ldj * torch.abs(torch.exp(-s.sum(dim=1)))
 
-        return z, ldj
+        return y, ldj
 
 
 class Flow(nn.Module):
@@ -143,11 +153,11 @@ class Model(nn.Module):
 
         return z, logdet
 
-    def forward(self, input):
+    def forward(self, x):
         """
         Given input, encode the input to z space. Also keep track of ldj.
         """
-        z = input
+        z = x
         ldj = torch.zeros(z.size(0), device=z.device)
 
         z = self.dequantize(z)
@@ -156,8 +166,8 @@ class Model(nn.Module):
         z, ldj = self.flow(z, ldj)
 
         # Compute log_pz and log_px per example
-
-        raise NotImplementedError
+        log_pz = log_prior(z)
+        log_px = log_pz + ldj
 
         return log_px
 
