@@ -1,6 +1,7 @@
 import argparse
 
 import torch
+from torch.nn.utils import clip_grad_norm_
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +9,7 @@ from datasets.mnist import mnist
 import os
 from math import *
 from statistics import *
-from torchvision.utils import save_image, make_grid
+from torchvision.utils import save_image
 
 
 def log_prior(x):
@@ -197,6 +198,7 @@ def epoch_iter(model, data, optimizer, device):
         if model.training:
             optimizer.zero_grad()
             loss.backward()
+            clip_grad_norm_(model.parameters(), max_norm=0.6)
             optimizer.step()
     avg_bpd = mean(losses)
     return avg_bpd
