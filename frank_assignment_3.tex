@@ -226,12 +226,14 @@ See Figure~\ref{fig:vae_samples} for samples of the VAE during training.
 
 \begin{figure}
   \centering
-  \includegraphics{assignment_3/code/figures/vae_sample_0.png}
-  \includegraphics{assignment_3/code/figures/vae_sample_10.png}
-  \includegraphics{assignment_3/code/figures/vae_sample_20.png}
-  \includegraphics{assignment_3/code/figures/vae_sample_30.png}
-  \includegraphics{assignment_3/code/figures/vae_sample_39.png}
-  \caption{Samples drawn from the VAE with encoding size \(20\) at epoch \(0,10,20,30,40\). At each epoch we sample 16 samples from \(p(Z)\).}
+  \begin{tabularx}{\linewidth}{XX}
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_sample_0.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_sample_10.png} \\
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_sample_20.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_sample_30.png} \\
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_sample_39.png}
+  \end{tabularx}
+  \caption{Samples drawn from the VAE with encoding size \(20\) at epoch \(0,10,20,30,40\) (from \I{top left} to \I{bottom right}). At each epoch we sample 16 samples from \(p(Z)\).}
   \label{fig:vae_samples}
 \end{figure}
 
@@ -278,9 +280,12 @@ For the Discriminator we have an image sized input and a single output.
 \end{align}
 
 \subsection{What are the parts of the GANs objective?}
-The left part \(\E_{p_{\t{data}}(\B{x})}[\log D(X)]\) is the data likelihood of the trainings data under the discriminator. Basically it maximizes the discriminators output for samples in the ground truth data set.
+The left part \(\E_{p_{\t{data}}(\B{x})}[\log D(X)]\) is the data likelihood of the trainings data under the discriminator.
+Basically it maximizes the discriminators output for samples in the ground truth data set.
 
-The right part \(\E_{p_z(\B{z})}[\log(1 - D(G(Z)))]\) gives the inverse score of the discriminator for sampled \(\B{z}\) that were put through the generator. The generator wants to minimize this as than outputs are similar for \(p_{\t{data}}\) and \(p_z\). The discriminator wants to maximize to have reciprocal outputs for the two distributions.
+The right part \(\E_{p_z(\B{z})}[\log(1 - D(G(Z)))]\) gives the inverse score of the discriminator for sampled \(\B{z}\) that were put through the generator.
+The generator wants to minimize this as than outputs are similar for \(p_{\t{data}}\) and \(p_z\).
+The discriminator wants to maximize to have reciprocal outputs for the two distributions.
 
 \subsection{How does a converged objective look like?}
 If training is converged than the generator produces perfect samples which mean that the distribution of generated samples is equal to the trainings set:
@@ -312,11 +317,17 @@ With the changed objective for the generator we averted this problem and as we w
 \subsection{Building the GAN}
 See code in \texttt{code/gan.py} for the implementation.
 
-We build the Generator \(G\) as follows: a linear layer from latent space into a hidden size \(h=128\) followed by three linear layers with adjacent leaky ReLU (with \(\α=0.2\)) and batch normalization, respectively. Each linear layer doubles the hidden size. The final linear layer projects down to the inputs image size and we squash the outputs with a tanh.
+We build the Generator \(G\) as follows:
+a linear layer from latent space into a hidden size \(h=128\) followed by three linear layers with adjacent leaky ReLU (with \(\α=0.2\)) and batch normalization, respectively.
+Each linear layer doubles the hidden size.
+The final linear layer projects down to the inputs image size and we squash the outputs with a tanh.
 
-We build the discriminator \(D\) as two linear layers again each followed by a leaky ReLU (\( \α = 0.2\)) and a dropout layer (\(p=0.3\)) for better regularization. The first takes the input size down to \(h\·4\) and subsequently to the half. Finally we have linear classifier with one output and squash this with a sigmoid.
+We build the discriminator \(D\) as two linear layers again each followed by a leaky ReLU (\( \α = 0.2\)) and a dropout layer (\(p=0.3\)) for better regularization.
+The first takes the input size down to \(h\·4\) and subsequently to the half.
+Finally we have linear classifier with one output and squash this with a sigmoid.
 
-We use optimizer Adam for both models and a fixed learning rate of \(\eta = 5e-4\). We separate the objectives for better stability as explained before and we sample from \(G\) for each objective again.
+We use optimizer Adam for both models and a fixed learning rate of \(\eta = 5e-4\).
+We separate the objectives for better stability as explained before and we sample from \(G\) for each objective again.
 
 \subsection{Sampling from GAN}
 Refer to Figure~\ref{fig:gan_samples} for samples taking during the training of our GAN.
@@ -388,9 +399,11 @@ Now of course for sampling we will sample from the prior which in our case is ju
 
 \subsection{What are the steps for training a flow model?}
 \begin{enumerate}
-  \item We build a list of bijective mappings. As we have to compute the determinant of the Jacobian we actually estimate two projections instead of one by masking the inputs into triangular matrix (a checkerboard) and its reverse.
+  \item We build a list of bijective mappings.
+  As we have to compute the determinant of the Jacobian we actually estimate two projections instead of one by masking the inputs into triangular matrix (a checkerboard) and its reverse.
   \item We take a batch of images \(\B{x}\) and preprocess them by normalizing and adding noise for regularization.
-  \item We put the \(\B{x}\) through the chain of bijective functions. We build up the hidden representation \(\B{h}_i\) and add up the log of the Jacobian's determinant.
+  \item We put the \(\B{x}\) through the chain of bijective functions.
+  We build up the hidden representation \(\B{h}_i\) and add up the log of the Jacobian's determinant.
   \item The resulting \(\log p(\B{x})\) from the sum of the final hidden state and the final determinant is our objective we want to maximize.
   \item We use backpropagation to estimate the weight gradients and update the functions parameters with a suitable optimizer (in our case Adam).
 \end{enumerate}
