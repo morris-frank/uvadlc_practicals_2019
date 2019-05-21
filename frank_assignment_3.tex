@@ -21,6 +21,8 @@
 \begin{document}
 \maketitle
 
+\tableofcontents
+
 \section{Variational Auto Encoders}
 We have:
 \begin{description}
@@ -354,8 +356,20 @@ One solution to this problem from~\cite{ho2019} is to add some noise to out disc
 In our case we would add some noise \(\sim \N(0,1)\) on our image pixels.
 The variance acts as a regularization hyperparameter.
 
-\subsection{Input and output}
-\subsection{Steps for training}
+\subsection{What is the input and output of the flow model?}
+The input to the flow based model is always of the same size (let different batch sizes).
+For training we put in the images plus the element wise gaussian noise.
+For inference we will got through the computational graph in reverse but because we have the bijective mappings our inputs are still of the image's size.
+Now of course for sampling we will sample from the prior which in our case is just from a normal Gaussian.
+
+\subsection{What are the steps for training a flow model?}
+\begin{enumerate}
+  \item We build a list of bijective mappings. As we have to compute the determinant of the Jacobian we actually estimate two projections instead of one by masking the inputs into triangular matrix (a checkerboard) and its reverse.
+  \item We take a batch of images \(\B{x}\) and preprocess them by normalizing and adding noise for regularization.
+  \item We put the \(\B{x}\) through the chain of bijective functions. We build up the hidden representation \(\B{h}_i\) and add up the log of the Jacobian's determinant.
+  \item The resulting \(\log p(\B{x})\) from the sum of the final hidden state and the final determinant is our objective we want to maximize.
+  \item We use backpropagation to estimate the weight gradients and update the functions parameters with a suitable optimizer (in our case Adam).
+\end{enumerate}
 
 \subsection{Implementation of the flow-based model}
 See the code in \texttt{code/nf.py} for the implementation.
