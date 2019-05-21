@@ -1,4 +1,3 @@
-from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 import torch
 
@@ -7,15 +6,48 @@ plt.style.use('ggplot')
 
 def plot_vae(zdim):
     fp = f"./vae_{zdim}_curves.pt"
-    torch.load(fp)
-    breakpoint()
+    data = torch.load(fp)
+
+    plt.figure(figsize=(7, 3))
+    plt.plot(data['train'], label='train')
+    plt.plot(data['val'], label='val')
+    plt.xlabel('Epochs')
+    plt.ylabel('ELBO')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f"figures/vae_{zdim}.pdf")
+
+
+def plot_nf():
+    fp = "./nf_curves.pt"
+    data = torch.load(fp)
+
+    plt.figure(figsize=(7, 3))
+    plt.plot(data['train'], label='train')
+    plt.plot(data['val'], label='val')
+    plt.xlabel('Epochs')
+    plt.ylabel('BPD')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f"figures/nf.pdf")
+
+
+def plot_gan():
+    fp = "./gan_curves.pt"
+    data = torch.load(fp)
+
+    plt.figure(figsize=(7, 3))
+    plt.plot(data['G'], label='Generator')
+    plt.plot(data['D'], label='Discriminator')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f"figures/gan.pdf")
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument('--nf', action='store_true')
-
-    args = parser.parse_args()
-
-    if args.nf:
-        plot_vae(z)
+    plot_gan()
+    plot_vae(2)
+    plot_vae(20)
+    plot_nf()

@@ -204,6 +204,22 @@ This uses the special property of normal distribution, that:
 \end{align}
 The only remaining stochastic process \(\N(0, \1_D)\) is therefore than outside the parameterized model and we can compute the gradient.
 
+\subsection{Building a VAE}
+See the code in \texttt{code/vae.py}
+
+\subsection{ELBO during training}
+\begin{figure}[]
+  \centering
+  \begin{tabularx}{\linewidth}{XX}
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_20.pdf} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_2.pdf}
+  \end{tabularx}
+  \caption{The ELBO curves of the trainings and validation set for encoding sizes \(z\) of \textit{left} 20 and \textit{tight} 2.}
+  \label{fig:elbo}
+\end{figure}
+
+\subsection{Samples during training}
+
 \section{Generative Adversarial Networks}
 We have:
 \begin{description}
