@@ -42,5 +42,4 @@ elif [[ $* == *--nf* ]]; then
     echo "srun python3 nf.py" >> run.job
 fi
 
-rm ./slurm-*
 sbatch run.job
