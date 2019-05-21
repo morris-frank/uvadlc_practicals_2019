@@ -198,7 +198,6 @@ def epoch_iter(model, data, optimizer, device):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-        print(f"Batch: {i}, Loss: {losses[-1]}")
     avg_bpd = mean(losses)
     return avg_bpd
 
