@@ -314,23 +314,45 @@ See code in \texttt{code/gan.py} for the implementation.
 \section{Generative Normalizing Flows}
 \subsection{Update equation for the \textit{multivariate} flow}
 In our flow model we are using an invertible function \(f(\·): \ℝ^m \rightarrow \ℝ^m\) to map an input \(\B{x}\) to its next step \(\B{z} = f(\B{x})\) (therefore \(x = f^{-1}(\B{z})\)).
-As our variables are random variables we instead write the old state times its update (= the flow):
+The transformation \(f(\·)\) changes our density manifold \(p(X)\) of the input.
+Now this change can be seen locally as contractions and stretching of the manifold (like pulling around the manifold, intuitively).
+The local change of our transformation is exactly its Jacobian \(\pf{f}{\B{x}^T}\).
+The change in local volume (the contractions) is the determinant of a transformation and therefore globally the determinant of the Jacobian \(\det \pf{f}{\B{x}^T}\).
+Using this we can write the updated density as:
 \begin{equation}
-  p(\B{x}) = p(\B{z})\·\log |\det \pf{f}{\B{x}}|
+  p(\B{x}) = p(\B{z}) \· | \det \pf{f}{\B{x}} |
 \end{equation}
-where \(\pf{f}{\B{x}}\) is the Jacobian.
-It follows directly:
+
+For the application of normalizing flows we will chain multiple such mapping to get the final \(p(\B{z})\).
+We describe the intermediate states with the hidden states \(\B{h}_i\).
+One transformation is then \(\det \pf{\B{h_i}}{\B{h}_{i-1}^T}\).
+And thus we can write the complete transformation as:
+
 \begin{equation}
-  \log p(\B{x}) = \log p(\B{z}) + \Σ_{l=1}^L \log |\det \pf{\B{h}_l}{\B{h}_{l-1}}|
+  \log p(\B{x}) = \log p(\B{z}) + \Σ_{l=1}^L \log | \det \pf{\B{h}_l}{\B{h}_{l-1}^T} |
 \end{equation}
-where again \(\pf{\B{h}_l}{\B{h}_{l-1}}\) is the Jacobian.
+
+We use the logarithm for numerical stability as we than have a sum instead of a product.
 
 \subsection{How are the formulas for the multivariate case constrained?}
 As given above the function \(f(\·)\) has to map to same dimensionality as the inputs.
+Otherwise  the determinant would be zero and we could not find the inverse.
+The second constraint is that we have to be actually able to compute the determinant of the Jacobian.
 
 \subsection{What computational problem might arise with this formulation?}
+The computational problem with the na\"{\i}ve approach is that we need to compute the determinant of the Jacobian.
+Computing the determinant of the Jacobian is at least \(\O(d^3)\)~\cite{rezende2015} (where \(d\) is the size of the hidden units \(\B{h}\)) and we have to do this \(L\) times (for each layer).
 
 \subsection{What changes if the inputs are discrete not continuos?}
+Image pixels have discrete values (mostly from the 8-bit intensity set).
+Thus our original image distribution \(p(X)\) is equal to the sum of Dirac delta functions.
+If we now apply our density contraction transformation on this we will still end up with a set of dirac deltas.
+This means our embedding space \(p(Z)\) is also discrete just like a standard autoencoder.
+We do want a  continuous regularized embedding space where we can interpolate.
+
+One solution to this problem from~\cite{ho2019} is to add some noise to out discrete input labels.
+In our case we would add some noise \(\sim \N(0,1)\) on our image pixels.
+The variance acts as a regularization hyperparameter.
 
 \subsection{Input and output}
 \subsection{Steps for training}
