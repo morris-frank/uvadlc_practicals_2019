@@ -3,7 +3,6 @@ import argparse
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
-import torch.nn.functional as F
 import numpy as np
 from datasets.mnist import mnist
 import os
