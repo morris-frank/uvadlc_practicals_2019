@@ -94,7 +94,7 @@ class VAE(nn.Module):
 
     def manifold_sample(self, n):
         xy = np.mgrid[0:n, 0:n].reshape((2, n**2)).T / (n - 1)
-        xy = (xy + 1e-4) * (1-1e-4)
+        xy = (xy + 4.45e-2) * 9e-1
 
         z = torch.tensor(stats.norm.ppf(xy), device=self.device, dtype=torch.float)
         with torch.no_grad():
@@ -176,8 +176,8 @@ def main():
         save_sample(μ_sample, imw, epoch)
 
         if ARGS.zdim == 2:
-            manifold = model.manifold_sample(20)
-            save_sample(manifold, imw, epoch, 20, 'manifold')
+            manifold = model.manifold_sample(ARGS.manifold_samples)
+            save_sample(manifold, imw, epoch, ARGS.manifold_samples, 'manifold')
 
     torch.save({'train': train_curve, 'val': val_curve}, f"vae_{ARGS.zdim}_curves.pt")
 
@@ -194,6 +194,7 @@ if __name__ == "__main__":
                         help="Training device 'cpu' or 'cuda:0'")
     parser.add_argument('--samples', type=int, default=16,
                         help="How many samples to sample when we sample.")
+    parser.add_argument('--manifold_samples', type=int, default=30)
     parser.add_argument('--data', type=str, default='./data',
                         help="DATA dir root")
 
