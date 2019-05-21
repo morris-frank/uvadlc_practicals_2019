@@ -29,12 +29,15 @@ export LD_LIBRARY_PATH=/hpc/eb/Debian9/cuDNN/7.1-CUDA-8.0.44-GCCcore-5.4.0/lib64
 if [[ $* == *--vae* ]]; then
     echo "Running VAE with big encoding"
     echo "srun python3 vae.py --data=${datasets}" >> run.job
+    rm figures/vae_*
 elif [[ $* == *--manifold_vae* ]]; then
     echo "Running VAE with 2-d encoding"
     echo "srun python3 vae.py --zdim=2 --data=${datasets}" >> run.job
+    rm figures/vae_*
 elif [[ $* == *--gan* ]]; then
     echo "Running GAN"
     echo "srun python3 gan.py" >> run.job
 fi
 
+rm ./slurm-*
 sbatch run.job
