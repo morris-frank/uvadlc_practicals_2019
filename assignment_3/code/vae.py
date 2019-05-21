@@ -17,7 +17,10 @@ class Encoder(nn.Module):
 
     def __init__(self, x_dim, hidden_dim=500, z_dim=20):
         super().__init__()
-        self.h = nn.Linear(x_dim, hidden_dim)
+        self.h = nn.Sequential(
+            nn.Linear(x_dim, hidden_dim),
+            nn.Tanh()
+        )
         self.μ = nn.Linear(hidden_dim, z_dim)
         self.σ = nn.Linear(hidden_dim, z_dim)
 
@@ -28,8 +31,9 @@ class Encoder(nn.Module):
         Returns mean and std with shape [batch_size, z_dim]. Make sure
         that any constraints are enforced.
         """
-        h = torch.tanh(self.h(x))
-        μ, σ = self.μ(h), self.σ(h)
+        h = self.h(x)
+        μ = self.μ(h)
+        σ = torch.sqrt(self.σ(h))
         return μ, σ
 
 
@@ -92,7 +96,7 @@ class VAE(nn.Module):
         img = torch.rand_like(μ, device=self.device).cpu() > μ.cpu()
         return img, μ
 
-    def manifold_sample(self, n):
+    def manifold(self, n):
         xy = np.mgrid[0:n, 0:n].reshape((2, n**2)).T / (n - 1)
         xy = (xy + 4.45e-2) * 9e-1
 
@@ -176,7 +180,7 @@ def main():
         save_sample(μ_sample, imw, epoch)
 
         if ARGS.zdim == 2:
-            manifold = model.manifold_sample(ARGS.manifold_samples)
+            manifold = model.manifold(ARGS.manifold_samples)
             save_sample(manifold, imw, epoch, ARGS.manifold_samples, 'manifold')
 
     torch.save({'train': train_curve, 'val': val_curve}, f"vae_{ARGS.zdim}_curves.pt")
