@@ -320,7 +320,20 @@ We build the discriminator \(D\) as two linear layers again each followed by a l
 We use optimizer Adam for both models and a fixed learning rate of \(\eta = 5e-4\). We separate the objectives for better stability as explained before and we sample from \(G\) for each objective again.
 
 \subsection{Sampling from GAN}
-\B{TODO: INCLUDE FIGURE SAMPLES}
+Refer to Figure~\ref{fig:gan_samples} for samples taking during the training of our GAN.
+
+\begin{figure}
+  \centering
+  \begin{tabularx}{\linewidth}{XXXX}
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/gan_2000.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/gan_8000.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/gan_94000.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/gan_94000.png}
+  \end{tabularx}
+
+  \caption{Samples from our GAN implementation during training. From \I{left} to \I{right}: 2 epochs, 8 epochs, 100 epochs, 200 epochs.}
+  \label{fig:gan_samples}
+\end{figure}
 
 \subsection{Interpolation using the GAN}
 \B{TODO: INTERPOLATION FIGURE}
@@ -390,9 +403,12 @@ See the code in \texttt{code/nf.py} for the implementation.
 \begin{figure}
   \centering
   \includegraphics[width=0.7\linewidth]{assignment_3/code/figures/nf.pdf}
-  \caption{}
+  \caption{The average bits per dimension during training of the normalizing flow model.}
   \label{fig:nf}
 \end{figure}
+
+\section{Conclusion}
+\B{TODO: Conclusion}
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
