@@ -300,12 +300,24 @@ at that point a perfectly discriminator is no different from randomness as it is
 \subsection{Why can \(\log(1 - D(G(Z)))\) be problematic?}
 In the beginning \(G(\·)\) and \(D(\·)\) are shit.
 But than in early training it is easier for the discriminator to differ between real and fake than it is for the generator to fool it.
-Hence our left side objective is \(\sim 1\) early on.
-This saturating effect makes backpropagation difficult as we need movement in the objective for it.
+Hence in our left side objective we get near 0 early on.
+This saturating effect makes backpropagation for the generator difficult with the losses near zero.
+The solution to this problem is fairly simple.
+We separate the two objectives into:
+\begin{align}
+  \min_D& -\E_{p_{\t{data}}(\B{x})}[\log D(X)] -\E_{p_z(\B{z})}[\log(1 - D(G(Z)))] \\
+  \min_G&  -\E_{p_z(\B{z})}[\log(D(G(Z)))]
+\end{align}
+With the changed objective for the generator we averted this problem and as we will update the two models consecutively its is not a problem that we formulated separate objectives.
 
 \subsection{Building the GAN}
 See code in \texttt{code/gan.py} for the implementation.
-\B{TODO: DESCRIBE IMPLEMENTATION}
+
+We build the Generator \(G\) as follows: a linear layer from latent space into a hidden size \(h=128\) followed by three linear layers with adjacent leaky ReLU (with \(\α=0.2\)) and batch normalization, respectively. Each linear layer doubles the hidden size. The final linear layer projects down to the inputs image size and we squash the outputs with a tanh.
+
+We build the discriminator \(D\) as two linear layers again each followed by a leaky ReLU (\( \α = 0.2\)) and a dropout layer (\(p=0.3\)) for better regularization. The first takes the input size down to \(h\·4\) and subsequently to the half. Finally we have linear classifier with one output and squash this with a sigmoid.
+
+We use optimizer Adam for both models and a fixed learning rate of \(\eta = 5e-4\). We separate the objectives for better stability as explained before and we sample from \(G\) for each objective again.
 
 \subsection{Sampling from GAN}
 \B{TODO: INCLUDE FIGURE SAMPLES}
