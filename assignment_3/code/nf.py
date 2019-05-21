@@ -8,6 +8,7 @@ import numpy as np
 from datasets.mnist import mnist
 import os
 from math import *
+from statistics import *
 from torchvision.utils import make_grid
 
 
@@ -16,7 +17,8 @@ def log_prior(x):
     Compute the elementwise log probability of a standard Gaussian, i.e.
     N(x | mu=0, sigma=1).
     """
-    raise NotImplementedError
+    lognx = -x**2 / 2 - log(sqrt(2*pi))
+    logp = lognx.sum(dim=1)
     return logp
 
 
@@ -53,7 +55,6 @@ class Coupling(torch.nn.Module):
 
         # Assigns mask to self.mask and creates reference for pytorch.
         self.register_buffer('mask', mask)
-        self.c_in = c_in
         # Create shared architecture to generate both the translation and
         # scale variables.
         # Suggestion: Linear ReLU Linear ReLU Linear.
@@ -79,15 +80,15 @@ class Coupling(torch.nn.Module):
         # NOTE: For stability, it is advised to model the scale via:
         # log_scale = tanh(h), where h is the scale-output
         # from the NN.
-        s, t = self.nn(self.mask * z).split(self.c_in)
+        s, t = self.nn(self.mask * z).chunk(2, dim=1)
         s = torch.tanh(s)
 
         if not reverse:
             y = self.mask * z + (1 - self.mask) * (z * torch.exp(s) + t)
-            ldj = ldj * torch.abs(torch.exp(s.sum(dim=1)))
+            ldj = ldj + s.sum(dim=1)
         else:
             y = self.mask * z + (1 - self.mask) * (z - t) * torch.exp(-s)
-            ldj = ldj * torch.abs(torch.exp(-s.sum(dim=1)))
+            #ldj = ldj
 
         return y, ldj
 
@@ -164,7 +165,6 @@ class Model(nn.Module):
         z, ldj = self.logit_normalize(z, ldj)
 
         z, ldj = self.flow(z, ldj)
-
         # Compute log_pz and log_px per example
         log_pz = log_prior(z)
         log_px = log_pz + ldj
@@ -184,7 +184,7 @@ class Model(nn.Module):
         return z
 
 
-def epoch_iter(model, data, optimizer):
+def epoch_iter(model, data, optimizer, device):
     """
     Perform a single epoch for either the training or validation.
     use model.training to determine if in 'training mode' or not.
@@ -192,23 +192,32 @@ def epoch_iter(model, data, optimizer):
     Returns the average bpd ("bits per dimension" which is the negative
     log_2 likelihood per dimension) averaged over the complete epoch.
     """
-
-    avg_bpd = None
-
+    losses = []
+    for i, (batch, _) in enumerate(data):
+        batch = batch.view(batch.shape[0], -1).to(device)
+        log_px = model.forward(batch)
+        loss = -torch.mean(log_px)
+        losses.append(loss.item())
+        if model.training:
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+        print(f"Batch: {i}, Loss: {losses[-1]}")
+    avg_bpd = mean(losses) / (28 * 28) / log(2)
     return avg_bpd
 
 
-def run_epoch(model, data, optimizer):
+def run_epoch(model, data, optimizer, device):
     """
     Run a train and validation epoch and return average bpd for each.
     """
     traindata, valdata = data
 
     model.train()
-    train_bpd = epoch_iter(model, traindata, optimizer)
+    train_bpd = epoch_iter(model, traindata, optimizer, device)
 
     model.eval()
-    val_bpd = epoch_iter(model, valdata, optimizer)
+    val_bpd = epoch_iter(model, valdata, optimizer, device)
 
     return train_bpd, val_bpd
 
@@ -225,20 +234,17 @@ def save_bpd_plot(train_curve, val_curve, filename):
 
 
 def main():
+    device = torch.device(ARGS.device)
     data = mnist()[:2]  # ignore test split
 
-    model = Model(shape=[784])
-
-    if torch.cuda.is_available():
-        model = model.cuda()
-
+    model = Model(shape=[784]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     os.makedirs('images_nfs', exist_ok=True)
 
     train_curve, val_curve = [], []
     for epoch in range(ARGS.epochs):
-        bpds = run_epoch(model, data, optimizer)
+        bpds = run_epoch(model, data, optimizer, device)
         train_bpd, val_bpd = bpds
         train_curve.append(train_bpd)
         val_curve.append(val_bpd)
@@ -258,6 +264,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', default=40, type=int,
                         help='max number of epochs')
+    parser.add_argument('--device', type=str, default="cuda:0",
+                        help="Training device 'cpu' or 'cuda:0'")
 
     ARGS = parser.parse_args()
 
