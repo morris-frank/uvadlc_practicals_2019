@@ -8,7 +8,7 @@ from datasets.mnist import mnist
 import os
 from math import *
 from statistics import *
-from torchvision.utils import save_image
+from torchvision.utils import save_image, make_grid
 
 
 def log_prior(x):
@@ -249,7 +249,7 @@ def main():
             epoch=epoch, train_bpd=train_bpd, val_bpd=val_bpd))
 
         # SAMPLING
-        imgs = model.sample(10).detach().cpu().view(10, w, w)
+        imgs = model.sample(10).detach().cpu().view(10, 1, w, w)
         save_image(imgs, f"figures/nf_{epoch}.png", nrow=5, normalize=True)
 
     torch.save({'train': train_curve, 'val': val_curve}, 'nf_curves.pt')
