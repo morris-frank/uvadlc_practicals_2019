@@ -208,6 +208,8 @@ The only remaining stochastic process \(\N(0, \1_D)\) is therefore than outside 
 See the code in \texttt{code/vae.py}
 
 \subsection{ELBO during training}
+See Figure~\ref{fig:elbo} for the plots of the ELBO curves.
+
 \begin{figure}[]
   \centering
   \begin{tabularx}{\linewidth}{XX}
@@ -219,6 +221,34 @@ See the code in \texttt{code/vae.py}
 \end{figure}
 
 \subsection{Samples during training}
+See Figure~\ref{fig:vae_samples} for samples of the VAE during training.
+
+\begin{figure}
+  \centering
+  \includegraphics{assignment_3/code/figures/vae_sample_0.png}
+  \includegraphics{assignment_3/code/figures/vae_sample_10.png}
+  \includegraphics{assignment_3/code/figures/vae_sample_20.png}
+  \includegraphics{assignment_3/code/figures/vae_sample_30.png}
+  \includegraphics{assignment_3/code/figures/vae_sample_39.png}
+  \caption{Samples drawn from the VAE with encoding size \(20\) at epoch \(0,10,20,30,40\). At each epoch we sample 16 samples from \(p(Z)\).}
+  \label{fig:vae_samples}
+\end{figure}
+
+\subsection{Manifold during training}
+See Figure~\ref{fig:vae_manifold} for three manifolds during training.
+
+\begin{figure}
+  \centering
+  \begin{tabularx}{\linewidth}{XXX}
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_manifold_0.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_manifold_20.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_manifold_39.png}
+  \end{tabularx}
+
+  \caption{The manifold of the VAE with encoding size \(2\) at epoch \(0, 20, 40\).}
+  \label{fig:vae_manifold}
+\end{figure}
+
 
 \section{Generative Adversarial Networks}
 We have:
