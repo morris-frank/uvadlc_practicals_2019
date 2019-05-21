@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mim
 from torchvision.utils import make_grid
 import numpy as np
-import math
 import os
 import scipy.stats as stats
 
@@ -198,7 +197,7 @@ if __name__ == "__main__":
                         help="Training device 'cpu' or 'cuda:0'")
     parser.add_argument('--samples', type=int, default=16,
                         help="How many samples to sample when we sample.")
-    parser.add_argument('--manifold_samples', type=int, default=30)
+    parser.add_argument('--manifold_samples', type=int, default=15)
     parser.add_argument('--data', type=str, default='./data',
                         help="DATA dir root")
 

@@ -94,6 +94,7 @@ def train(dataloader, discriminator, generator, optimizer_G, optimizer_D, device
             if batches_done % ARGS.save_interval == 0:
                 imgs = generator.sample(25).detach().view(25, 1, imw, imh)
                 save_image(imgs, f"figures/gan_{batches_done}.png", nrow=5, normalize=True)
+                torch.save({'G': losses_g, 'D': losses_d}, 'gan_curves.pt')
         losses_d.append(mean(_losses_d))
         losses_g.append(mean(_losses_g))
     torch.save({'G': losses_g, 'D': losses_d}, 'gan_curves.pt')
