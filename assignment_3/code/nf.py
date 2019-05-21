@@ -9,7 +9,7 @@ from datasets.mnist import mnist
 import os
 from math import *
 from statistics import *
-from torchvision.utils import make_grid
+from torchvision.utils import save_image
 
 
 def log_prior(x):
@@ -26,11 +26,9 @@ def sample_prior(size):
     """
     Sample from a standard Gaussian.
     """
-    raise NotImplementedError
-
+    sample = torch.randn(size)
     if torch.cuda.is_available():
         sample = sample.cuda()
-
     return sample
 
 
@@ -85,10 +83,10 @@ class Coupling(torch.nn.Module):
 
         if not reverse:
             y = self.mask * z + (1 - self.mask) * (z * torch.exp(s) + t)
-            ldj = ldj + s.sum(dim=1)
+            ldj = ldj + ((1 - self.mask) * s).sum(dim=1)
         else:
             y = self.mask * z + (1 - self.mask) * (z - t) * torch.exp(-s)
-            #ldj = ldj
+            # ldj = ldj
 
         return y, ldj
 
@@ -178,9 +176,8 @@ class Model(nn.Module):
         """
         z = sample_prior((n_samples,) + self.flow.z_shape)
         ldj = torch.zeros(z.size(0), device=z.device)
-
-        raise NotImplementedError
-
+        z, ldj = self.flow.forward(z, ldj, reverse=True)
+        z, ldj = self.logit_normalize(z, ldj, reverse=True)
         return z
 
 
@@ -197,13 +194,13 @@ def epoch_iter(model, data, optimizer, device):
         batch = batch.view(batch.shape[0], -1).to(device)
         log_px = model.forward(batch)
         loss = -torch.mean(log_px)
-        losses.append(loss.item())
+        losses.append(loss.item() / 28**2 / log(2))
         if model.training:
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
         print(f"Batch: {i}, Loss: {losses[-1]}")
-    avg_bpd = mean(losses) / (28 * 28) / log(2)
+    avg_bpd = mean(losses)
     return avg_bpd
 
 
@@ -236,8 +233,9 @@ def save_bpd_plot(train_curve, val_curve, filename):
 def main():
     device = torch.device(ARGS.device)
     data = mnist()[:2]  # ignore test split
+    w = 28
 
-    model = Model(shape=[784]).to(device)
+    model = Model(shape=[w**2]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     os.makedirs('images_nfs', exist_ok=True)
@@ -251,13 +249,11 @@ def main():
         print("[Epoch {epoch}] train bpd: {train_bpd} val_bpd: {val_bpd}".format(
             epoch=epoch, train_bpd=train_bpd, val_bpd=val_bpd))
 
-        # --------------------------------------------------------------------
-        #  Add functionality to plot samples from model during training.
-        #  You can use the make_grid functionality that is already imported.
-        #  Save grid to images_nfs/
-        # --------------------------------------------------------------------
+        # SAMPLING
+        imgs = model.sample(10).detach().cpu().view(10, w, w)
+        save_image(imgs, f"figures/nf_{epoch}.png", nrow=5, normalize=True)
 
-    save_bpd_plot(train_curve, val_curve, 'nfs_bpd.pdf')
+    torch.save({'train': train_curve, 'val': val_curve}, 'nf_curves.pt')
 
 
 if __name__ == "__main__":
