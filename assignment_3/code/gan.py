@@ -46,8 +46,10 @@ class Discriminator(nn.Module):
         self.D = nn.Sequential(
             nn.Linear(x_dim, h * 4),
             nn.LeakyReLU(0.2),
+            nn.Dropout(0.3),
             nn.Linear(h * 4, h * 2),
             nn.LeakyReLU(0.2),
+            nn.Dropout(0.3),
             nn.Linear(h * 2, 1),
             nn.Sigmoid()
         )
@@ -95,9 +97,11 @@ def train(dataloader, discriminator, generator, optimizer_G, optimizer_D, device
                 imgs = generator.sample(25).detach().view(25, 1, imw, imh)
                 save_image(imgs, f"figures/gan_{batches_done}.png", nrow=5, normalize=True)
                 torch.save({'G': losses_g, 'D': losses_d}, 'gan_curves.pt')
+                torch.save(generator.state_dict(), "gan_mnist_generator.pt")
         losses_d.append(mean(_losses_d))
         losses_g.append(mean(_losses_g))
     torch.save({'G': losses_g, 'D': losses_d}, 'gan_curves.pt')
+    torch.save(generator.state_dict(), "gan_mnist_generator.pt")
 
 
 def main():
@@ -124,7 +128,6 @@ def main():
 
     # You can save your generator here to re-use it to generate images for your
     # report, e.g.:
-    # torch.save(generator.state_dict(), "mnist_generator.pt")
 
 
 if __name__ == "__main__":
@@ -137,7 +140,7 @@ if __name__ == "__main__":
                         help='learning rate')
     parser.add_argument('--latent_dim', type=int, default=100,
                         help='dimensionality of the latent space')
-    parser.add_argument('--save_interval', type=int, default=500,
+    parser.add_argument('--save_interval', type=int, default=1000,
                         help='save every SAVE_INTERVAL iterations')
     parser.add_argument('--device', type=str, default="cuda:0",
                         help="Training device 'cpu' or 'cuda:0'")
