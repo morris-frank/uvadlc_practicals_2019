@@ -301,6 +301,51 @@ But than in early training it is easier for the discriminator to differ between 
 Hence our left side objective is \(\sim 1\) early on.
 This saturating effect makes backpropagation difficult as we need movement in the objective for it.
 
+\subsection{Building the GAN}
+See code in \texttt{code/gan.py} for the implementation.
+\B{TODO: DESCRIBE IMPLEMENTATION}
+
+\subsection{Sampling from GAN}
+\B{TODO: INCLUDE FIGURE SAMPLES}
+
+\subsection{Interpolation using the GAN}
+\B{TODO: INTERPOLATION FIGURE}
+
+\section{Generative Normalizing Flows}
+\subsection{Update equation for the \textit{multivariate} flow}
+In our flow model we are using an invertible function \(f(\·): \ℝ^m \rightarrow \ℝ^m\) to map an input \(\B{x}\) to its next step \(\B{z} = f(\B{x})\) (therefore \(x = f^{-1}(\B{z})\)).
+As our variables are random variables we instead write the old state times its update (= the flow):
+\begin{equation}
+  p(\B{x}) = p(\B{z})\·\log |\det \pf{f}{\B{x}}|
+\end{equation}
+where \(\pf{f}{\B{x}}\) is the Jacobian.
+It follows directly:
+\begin{equation}
+  \log p(\B{x}) = \log p(\B{z}) + \Σ_{l=1}^L \log |\det \pf{\B{h}_l}{\B{h}_{l-1}}|
+\end{equation}
+where again \(\pf{\B{h}_l}{\B{h}_{l-1}}\) is the Jacobian.
+
+\subsection{How are the formulas for the multivariate case constrained?}
+As given above the function \(f(\·)\) has to map to same dimensionality as the inputs.
+
+\subsection{What computational problem might arise with this formulation?}
+
+\subsection{What changes if the inputs are discrete not continuos?}
+
+\subsection{Input and output}
+\subsection{Steps for training}
+
+\subsection{Implementation of the flow-based model}
+See the code in \texttt{code/nf.py} for the implementation.
+
+\subsection{Bits per dimension during training}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\linewidth]{assignment_3/code/figures/nf.pdf}
+  \caption{}
+  \label{fig:nf}
+\end{figure}
+
 \bibliographystyle{unsrtnat}
 \bibliography{references}
 
