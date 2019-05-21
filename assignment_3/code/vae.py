@@ -33,7 +33,7 @@ class Encoder(nn.Module):
         """
         h = self.h(x)
         μ = self.μ(h)
-        σ = torch.sqrt(self.σ(h))
+        σ = torch.sqrt(torch.exp(self.σ(h)))
         return μ, σ
 
 
