@@ -37,6 +37,9 @@ elif [[ $* == *--manifold_vae* ]]; then
 elif [[ $* == *--gan* ]]; then
     echo "Running GAN"
     echo "srun python3 gan.py" >> run.job
+elif [[ $* == *--nf* ]]; then
+    echo "Running NF"
+    echo "srun python3 nf.py" >> run.job
 fi
 
 rm ./slurm-*
