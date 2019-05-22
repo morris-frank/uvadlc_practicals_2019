@@ -26,6 +26,7 @@ We have:
 \begin{description}
   \item[\(\mathcal{D}={\{\B{x}_n\}}^N_{n=1}\)] the dataset
   \item[\(\B{x}_n\in{\{0,1\}}^M\)] one datapoint, from Bernoulli distribution
+  \item[\(p(Z = z)\)] our latent distribution.
 \end{description}
 
 \subsection{Variational autoencoders vs standard autoencoders}
@@ -42,12 +43,13 @@ The encoder encodes the data into a smaller latent space and the decode generate
 
 \subsubsection{How do they differ in their main function?}
 We see that both methods vary considerably in their main optimization objective.
-The VAE objective includes modeling the intractable encoding distribution\(p(Z|X)\) through the surrogate \(q(Z|X)\).
+The VAE objective includes modeling the intractable encoding distribution \(p(Z|X)\) through the surrogate \(q(Z|X)\).
 The standard autoencoder on the other side does not actually model the encoding distribution but only has the reconstruction capabilities of those encodings as its objective.
 
 \subsubsection{Is the standard autoencoder a generative model?}
-The standard autoencoder is not a generative model as one cannot sample from the implicit latent space.
-We do have the latent representation and thus can vary the input into the decoder but this does not relate to sampling from the latent manifold of all possible encodings.
+The standard autoencoder is \B{not} a generative model as using it we cannot sample from the implicit latent space.
+We do have the latent representation and thus can vary the input into the decoder but this does not necessarily relate to smoothly varying the  decoded outputs.
+Relationships in the latent space do not correlate with relationships in the image space.
 We can sample from the space the encodings live in but as we do not model the actual distribution this is not a generative model.
 
 \subsubsection{Can the VAE be a drop-in replacement for a normal autoencoder?}
@@ -57,11 +59,11 @@ The VAE does do they same and can be used for the same.
 Further autoencoders can denoise data by mapping the noisy data close to the noise-less data in the latent space.
 Again the VAE can do the same.
 Generally the addition of the VAE is enforcing the continuity of the latent space by introducing \(q(\·)\).
-While this opens up new (see generative) applications it does not restrictive the former.
+While this opens up new (see generative) applications it does not restrict the former.
 
 \subsubsection{Why does VAE generalize better?}
-The standard autoencoder is missing the is not modelling the encoding distribution.
-In the VAE our \(q(Z|X)\) forces the latent space to be continuos.
+The standard autoencoder is not modelling the encoding distribution.
+In the VAE our \(q(Z|X)\) forces the latent space to be continuos by regularizing the mappings into from image space into it.
 As such interpolating in the latent space does correspond to interpolating in the data space.
 During training we therefore build a latent space that is better capable to handling unseen data and can therefore also generalize beyond the trainings data.
 
@@ -73,7 +75,7 @@ Than we sample each pixel from each bernoulli \(\text{pixel}_m \sim \text{Bern}(
 
 \subsection{Why is the assumption of \(p(Z)\) not restrictive?}
 Our assumption that \(p(Z)\) is a standard-normal distribution does not hinder us from learning a complex manifold for \(X\) as we transform it using \(f_\θ(\·)\).
-Thus the complexity lies in the mapping from latent \(z\)-space and \(x\)-space.
+Thus the complexity lies in the mapping from latent \(z\)-space and \(x\)-space (and the reverse).
 
 \subsection{Evaluating \(\log p(\B{x}_n)\)}
 \subsubsection{Approximating using Monte-Carlo}
@@ -85,11 +87,11 @@ We can sample from our distribution of \(\B{z}_n\) to compute the integral for o
 \end{align}
 
 \subsubsection{Why is Monte-Carlo integration here inefficient?}
-We sample from \(p(Z)\).
-As we nee the integral for each datapoint this is inefficient with any non trivial dimensionality in \(Z\).
+We sample from \(p(Z = z)\).
+As we need the integral for each datapoint this is inefficient with any non trivial dimensionality of \(\B{z}\).
 The precision of our density estimation of \(p(\B{x}_n|\B{z}_n)\) decreases exponentially as the dimension of \(\B{x}_n\) increases.
 As such we would need to increase the number of samples exponentially with higher dimension of \(\B{z}_n\) to keep the estimation precise.
-In the real world the hidden embeddings often has hundreds of dimensions.
+In the real world the hidden embeddings often have hundreds of dimensions.
 A density dimension that we would have to do for every single input in every inference step is too inefficient to be usable.
 
 \subsection{Kullback-Leibler divergence of Gaussians}
@@ -104,6 +106,8 @@ Checking with the closed form solution in Section~\ref{sec:kl_closed_form} we se
 
 \subsubsection{Closed-form solution of the KL-divergence}%
 \label{sec:kl_closed_form}
+We want to press our encodings into the shape of our fixed embedding distribution \(p(Z = z)\).
+Therefore we want to find the divergence of the distribution from the encoding from the fixed standard normal:
 \begin{align}
   q(x) &= \÷{1}{\sqrt{2\π}\σ_q} \exp{\left[-\÷{1}{2}{(\÷{x-\μ_q}{\σ_q})}^2\right]}\\
   p(x) &= \÷{1}{\sqrt{2\π}} \exp{\left[-\÷{1}{2}x^2\right]}\\
@@ -122,10 +126,10 @@ The evidence lower bound (ELBO) for our VAE is given by:
 \begin{equation}
   \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}] - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))
 \end{equation}
-We want to maximize our data model \(p(\B{x}_n)\), or written including the ELBO:\@
+We want to maximize our data likelihood \(p(\B{x}_n)\), or written including the ELBO:\@
 \begin{equation}
-  p(\B{x}_n) =  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}
-                - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))]
+  p(\B{x}_n) =  \E_{q(z|\B{x}_n)}[\log{p(\B{x}_n|Z)}]
+                - D_{\t{KL}}(q(Z|\B{x}_n)||p(Z))
                 + D_{\t{KL}}(q(Z|\B{x}_n)||p(Z|\B{x}_n))
 \end{equation}
 As KL divergence is strictly \(>0\) we directly see that the ELBO is a lower bound for our actual objective.
@@ -144,7 +148,9 @@ In the first case the likelihood of the trainings data rises meaning we get a be
 The reconstruction gets better.
 In the second case our surrogate gets more similar to the actual encoding which means we improve our embeddings.
 
-%Interestingly this fact does imply our model might behave quite differently to what we would expect.
+Interestingly this fact does imply our model might behave quite differently to what we would expect.
+If the decoder gets increasingly well and generates outputs with high likelihood we can increase one of our objective without the other.
+This means the VAE could loose its encoding capabilities but still produce a high likelihood, a high objective~\cite{paulrubenstein2019}.
 
 \subsection{How can we name the parts of the loss of an VAE?}
 We can write the loss of the VAE as the per-sample sum of the \textit{reconstruction} and the \textit{regularizer} loss:
@@ -179,7 +185,9 @@ We assume for our encoder:
 As we now have a multivariate distribution our derivation of the KL divergence from the standard normal changes slightly:
 
 \begin{align}
-  D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z)) &= \÷{1}{2} \left[ \Σ_i{\Sigma_\φ(\B{x}_n)}_i^{-1} + \μ_\φ^T\μ_\φ - d_z - \log(\Π_i{\Sigma_\φ\B{x}_n)}_i \right]
+  D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))
+  &= \÷{1}{2} \left[ \Tr({\Sigma_\φ(\B{x}_n)^{-1} \1}) + \μ_\φ^T\μ_\φ - d_z - \log\det{\Sigma_\φ(\B{x}_n)}_i \right]\\
+  &= \÷{1}{2} \left[ \Σ_i{\Sigma_\φ(\B{x}_n)}_i^{-1} + \μ_\φ^T\μ_\φ - d_z - \log\Π_i{\Sigma_\φ( \B{x}_n)}_i \right]
 \end{align}
 
 \begin{align}
@@ -188,7 +196,8 @@ As we now have a multivariate distribution our derivation of the KL divergence f
   &\approx -\log p_\θ(\B{x}_n|\B{z}_n)\quad \t{with } \B{z}_n\sim q_\φ (Z|\B{x}_n)\\
   \L^{\t{reg}}_n
   &= D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))\\
-  &= \÷{1}{2} \left[ \Σ_i{\Sigma_\φ(\B{x}_n)}_i^{-1} + \μ_\φ^T\μ_\φ - d_z - \log(\Π_i{\Sigma_\φ\B{x}_n)}_i \right]\\
+  &= \÷{1}{2} \left[ \Σ_i{\Sigma_\φ(\B{x}_n)}_i^{-1} + \μ_\φ^T\μ_\φ - d_z - \log\Π_i{\Sigma_\φ(\B{x}_n)}_i \right]\\
+  &= \÷{1}{2} \left[ \Σ_i{\Sigma_\φ(\B{x}_n)}_i^{-1} + \μ_\φ^T\μ_\φ - d_z - \Σ_i\log{\Sigma_\φ(\B{x}_n)}_i \right]\\
   \L
   &= \÷{1}{N}\Σ_{n=1}^N (\L^{\t{recon}}_n + \L^{\t{reg}}_n)
 \end{align}
@@ -223,7 +232,7 @@ See Figure~\ref{fig:elbo} for the plots of the ELBO curves.
     \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_20.pdf} &
     \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_2.pdf}
   \end{tabularx}
-  \caption{The ELBO curves of the trainings and validation set for encoding sizes \(z\) of \textit{left} 20 and \textit{tight} 2.}
+  \caption{The ELBO curves of the trainings and validation set for encoding sizes \(z\) of \textit{left} 20 and \textit{right} 2.}
   \label{fig:elbo}
 \end{figure}
 
@@ -367,7 +376,7 @@ For each marginal dimension we build the equidistant steps (in Euclidean space) 
 \begin{figure}
   \centering
   \includegraphics[width=0.9\linewidth]{assignment_3/code/figures/gan_interpolate.png}
-  \caption{Equidistant interpolations between different randomly selected points in the latent space. Each row is one interpolation. At each row we sample a new random point and interpolate from the last sample.}
+  \caption{Equidistant interpolations for the GAN between different randomly selected points in the latent space. Each row is one interpolation. At each row we sample a new random point and interpolate from the last sample.}
   \label{fig:gan_interpolation}
 \end{figure}
 
@@ -431,15 +440,37 @@ Now of course for sampling we will sample from the prior which in our case is ju
   \item We use backpropagation to estimate the weight gradients and update the functions parameters with a suitable optimizer (in our case Adam).
 \end{enumerate}
 
+For inference (sampling) we can proceed easily:
+\begin{enumerate}
+  \item We sample from the chosen prior in the size of our images. (In our case the standard normal)
+  \item We put this sample through the layers in reverse order and in each layer we apply the inverse transformation with learned deep weights for scaling and translation.
+  \item The last layer will give us the actual image.
+\end{enumerate}
+
 \subsection{Implementation of the flow-based model}
 See the code in \texttt{code/nf.py} for the implementation.
+We are reaching around 1.8 bits per dimension information during training.
+In Figure~\ref{fig:nf_samples} we plot some samples during training.
 
 \subsection{Bits per dimension during training}
+See Figure~\ref{fig:nf} for the trainings progress.
 \begin{figure}
   \centering
   \includegraphics[width=0.7\linewidth]{assignment_3/code/figures/nf.pdf}
   \caption{The average bits per dimension during training of the normalizing flow model.}
   \label{fig:nf}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{tabularx}{0.8\linewidth}{XX}
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/nf_0.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/nf_13.png} \\
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/nf_26.png} &
+    \includegraphics[width=\linewidth]{assignment_3/code/figures/nf_39.png}
+  \end{tabularx}
+  \caption{Samples from the normalizing flows model during training. From \I{top left} to \I{bottom right}: 1 epochs, 13 epochs, 26 epochs, 40 epochs}
+  \label{fig:nf_samples}
 \end{figure}
 
 \section{Conclusion}
