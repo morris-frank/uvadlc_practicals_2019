@@ -7,6 +7,8 @@ import torchvision.transforms as transforms
 from torchvision.utils import save_image
 from torchvision import datasets
 from statistics import mean
+import scipy.stats as stats
+import numpy as np
 
 
 class Generator(nn.Module):
@@ -37,6 +39,15 @@ class Generator(nn.Module):
     def sample(self, bs):
         z = torch.randn((bs, self.latent_dim), device=self.device)
         return self.forward(z)
+
+    def interpolate(self, a=None, steps=10):
+        b = np.random.rand(1, self.latent_dim)
+        if a is None:
+            a = np.random.rand(1, self.latent_dim)
+        xy = np.linspace(0, 1, steps)[:, None] * (b - a) + a
+        xy = stats.norm.ppf(xy)
+        x = self.forward(torch.tensor(xy, device=self.device, dtype=torch.float))
+        return x, b
 
 
 class Discriminator(nn.Module):

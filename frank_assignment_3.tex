@@ -171,7 +171,15 @@ This is exactly what we want as we thus make a partition of the embedding manifo
 \subsection{Writing down the complete loss}
 We assume for our encoder:
 \begin{align}
-  q_\φ(\B{z}_n|\B{x}_n) &= \N(\B{z}_n|\μ_\φ(\B{x}_n), \diag(\Sigma_\φ(\B{x}_n)))
+  q_\φ(\B{z}_n|\B{x}_n)
+  &= \N(\B{z}_n|\μ_\φ(\B{x}_n), \diag(\Sigma_\φ(\B{x}_n)))\\
+  &= {(2\π)}^{-\÷{k}{2}} {(\Π_i{\Sigma_\φ(\B{x}_n)}_i)}^{-\÷{1}{2}} \exp{(-\÷{1}{2} {(\B{z}_n-\μ_\φ(\B{x}_n))}^T {(\diag\Sigma_\φ(\B{x}_n))}^{-1} (\B{z}_n -\μ_\φ(\B{x}_n)) )}
+\end{align}
+
+As we now have a multivariate distribution our derivation of the KL divergence from the standard normal changes slightly:
+
+\begin{align}
+  D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z)) &= \÷{1}{2} \left[ \Σ_i{\Sigma_\φ(\B{x}_n)}_i^{-1} + \μ_\φ^T\μ_\φ - d_z - \log(\Π_i{\Sigma_\φ\B{x}_n)}_i \right]
 \end{align}
 
 \begin{align}
@@ -180,12 +188,10 @@ We assume for our encoder:
   &\approx -\log p_\θ(\B{x}_n|\B{z}_n)\quad \t{with } \B{z}_n\sim q_\φ (Z|\B{x}_n)\\
   \L^{\t{reg}}_n
   &= D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))\\
-  &= \÷{{\Sigma_\φ(\B{x}_n)}^2 + {\μ_\φ(\B{x}_n)}^2 -1}{2} -\log \Sigma_\φ(\B{x}_n)\\
+  &= \÷{1}{2} \left[ \Σ_i{\Sigma_\φ(\B{x}_n)}_i^{-1} + \μ_\φ^T\μ_\φ - d_z - \log(\Π_i{\Sigma_\φ\B{x}_n)}_i \right]\\
   \L
-  &= \÷{1}{N}\Σ_{n=1}^N (\L^{\t{recon}}_n + \L^{\t{reg}}_n)\\
-  &=
+  &= \÷{1}{N}\Σ_{n=1}^N (\L^{\t{recon}}_n + \L^{\t{reg}}_n)
 \end{align}
-\B{TODO: FiNISH this and make loss multivariate}
 
 \subsection{The reparametrization trick}
 \subsubsection{Why do we need \( \∇_\φ\L \)?}
@@ -353,7 +359,17 @@ Refer to Figure~\ref{fig:gan_samples} for samples taking during the training of 
 \end{figure}
 
 \subsection{Interpolation using the GAN}
-\B{TODO: INTERPOLATION FIGURE}
+For an example of interpolating in the latent space of our GAN check Figure~\ref{fig:gan_interpolation}.
+We proceed equally to the manifold sampling in the VAE.
+We sample uniformly from the unit cube with latent dimensionality of the Generator.
+For each marginal dimension we build the equidistant steps (in Euclidean space) and transform the resulting intermediate points with the inverse cumulative density of the normal distribution.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\linewidth]{assignment_3/code/figures/gan_interpolate.png}
+  \caption{Equidistant interpolations between different randomly selected points in the latent space. Each row is one interpolation. At each row we sample a new random point and interpolate from the last sample.}
+  \label{fig:gan_interpolation}
+\end{figure}
 
 \section{Generative Normalizing Flows}
 \subsection{Update equation for the \textit{multivariate} flow}
