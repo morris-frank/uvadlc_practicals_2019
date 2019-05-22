@@ -474,7 +474,13 @@ See Figure~\ref{fig:nf} for the trainings progress.
 \end{figure}
 
 \section{Conclusion}
-\B{TODO: Conclusion}
+In this assignment we played around with three different types of deep generative models: Variational Autoencoders, Generative Adversarial Networks and Normalizing Flow networks.
+
+\begin{description}
+  \item[VAE] uses an encoder to project data into the smaller latent space and a decoder to reconstruct natural images from the latent space. \B{Objective:} have the decoder reconstruct with little error + regularize the embeddings of the inputs onto a chosen latent distribution.
+  \item[GAN] plays a zero-sum game of a Generator making images from a latent space and a Discriminator differing between real and not real. \B{Objective:} the Generator should fool the Discriminator and the Discriminator should not be fooled by it and recognize real images as such.
+  \item[NF] map from data space to a same-sized latent space with a chain of invertible functions that transform the data's manifold. Has only one network because transformation can be inverted. \B{Objective:} similar to VAE, we minimize divergence of the posterior to a chosen latent prior.
+\end{description}
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
