@@ -433,7 +433,7 @@ Now of course for sampling we will sample from the prior which in our case is ju
 \begin{enumerate}
   \item We build a list of bijective mappings.
   As we have to compute the determinant of the Jacobian we actually estimate two projections instead of one by masking the inputs into triangular matrix (a checkerboard) and its reverse.
-  \item We take a batch of images \(\B{x}\) and preprocess them by normalizing and adding noise for regularization.
+  \item We take a batch of images \(\B{x}\) and preprocess them by normalizing and adding noise for regularization (dequantization).
   \item We put the \(\B{x}\) through the chain of bijective functions.
   We build up the hidden representation \(\B{h}_i\) and add up the log of the Jacobian's determinant.
   \item The resulting \(\log p(\B{x})\) from the sum of the final hidden state and the final determinant is our objective we want to maximize.
@@ -486,8 +486,12 @@ In this assignment we played around with three different types of deep generativ
 \begin{description}
   \item[VAE] uses an encoder to project data into the smaller latent space and a decoder to reconstruct natural images from the latent space. \B{Objective:} have the decoder reconstruct with little error + regularize the embeddings of the inputs onto a chosen latent distribution.
   \item[GAN] plays a zero-sum game of a Generator making images from a latent space and a Discriminator differing between real and not real. \B{Objective:} the Generator should fool the Discriminator and the Discriminator should not be fooled by it and recognize real images as such.
-  \item[NF] map from data space to a same-sized latent space with a chain of invertible functions that transform the data's manifold. Has only one network because transformation can be inverted. \B{Objective:} similar to VAE, we minimize divergence of the posterior to a chosen latent prior.
+  \item[NF] map from data space to a same-sized latent space with a chain of invertible functions that transform the data manifold. Has only one network because transformation can be inverted. \B{Objective:} similar to VAE, we minimize divergence of the posterior to a chosen latent prior.
 \end{description}
+
+Comparing the quality of the samples (Figures~\ref{fig:vae_samples},~\ref{fig:gan_interpolation} and~\ref{fig:nf_interpolate}) we see that the flow model gives us the most crisp reconstruction of models followed by the GAN and the VAE.\@ But this comes at a big computational cost.
+Training of the GAN takes by far the longest which we explained before.
+On the other hand the flow model is by far the biggest having around ten times more parameters than the GAN.
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
