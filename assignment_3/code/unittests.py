@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import torch
 
-from a3_nf_template import Coupling, Flow, get_mask
+from nf import Coupling, Flow, get_mask
 
 
 def mean_error(x, y):
