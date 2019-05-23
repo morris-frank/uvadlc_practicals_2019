@@ -8,7 +8,7 @@ def plot_vae(zdim):
     fp = f"./vae_{zdim}_curves.pt"
     data = torch.load(fp)
 
-    plt.figure(figsize=(7, 3))
+    plt.figure(figsize=(3.3, 2), dpi=2*72)
     plt.plot(data['train'], label='train')
     plt.plot(data['val'], label='val')
     plt.xlabel('Epochs')
@@ -22,7 +22,7 @@ def plot_nf():
     fp = "./nf_curves.pt"
     data = torch.load(fp)
 
-    plt.figure(figsize=(7, 3))
+    plt.figure(figsize=(5, 2), dpi=2*72)
     plt.plot(data['train'], label='train')
     plt.plot(data['val'], label='val')
     plt.xlabel('Epochs')
@@ -36,7 +36,7 @@ def plot_gan():
     fp = "./gan_curves.pt"
     data = torch.load(fp)
 
-    plt.figure(figsize=(7, 3))
+    plt.figure(figsize=(5, 2.2), dpi=2*72)
     plt.plot(data['G'], label='Generator')
     plt.plot(data['D'], label='Discriminator')
     plt.xlabel('Epochs')
