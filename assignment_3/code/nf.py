@@ -238,7 +238,7 @@ def main():
     model = Model(shape=[w**2]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-    os.makedirs('images_nfs', exist_ok=True)
+    os.makedirs('figures', exist_ok=True)
 
     train_curve, val_curve = [], []
     for epoch in range(ARGS.epochs):
@@ -254,6 +254,7 @@ def main():
         save_image(imgs, f"figures/nf_{epoch}.png", nrow=5, normalize=True)
 
     torch.save({'train': train_curve, 'val': val_curve}, 'nf_curves.pt')
+    torch.save(model.state_dict(), "nf_model.pt")
 
 
 if __name__ == "__main__":
