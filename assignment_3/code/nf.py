@@ -10,6 +10,7 @@ import os
 from math import *
 from statistics import *
 from torchvision.utils import save_image
+from scipy import stats
 
 
 def log_prior(x):
@@ -120,6 +121,8 @@ class Flow(nn.Module):
 class Model(nn.Module):
     def __init__(self, shape):
         super().__init__()
+        if type(shape) is int:
+            shape = (shape,)
         self.flow = Flow(shape)
 
     def dequantize(self, z):
@@ -179,6 +182,16 @@ class Model(nn.Module):
         z, ldj = self.flow.forward(z, ldj, reverse=True)
         z, ldj = self.logit_normalize(z, ldj, reverse=True)
         return z
+
+    def interpolate(self, a=None, steps=10):
+        b = np.random.rand(1, self.flow.z_shape[0])
+        if a is None:
+            a = np.random.rand(1, self.flow.z_shape[0])
+        xy = np.linspace(0, 1, steps)[:, None] * (b - a) + a
+        xy = stats.norm.ppf(xy)
+        x, _ = self.flow.forward(torch.tensor(xy, dtype=torch.float), None, reverse=True)
+        x, _ = self.logit_normalize(x, torch.zeros(steps), reverse=True)
+        return x, b
 
 
 def epoch_iter(model, data, optimizer, device):

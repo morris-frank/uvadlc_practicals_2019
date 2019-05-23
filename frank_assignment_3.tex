@@ -153,7 +153,7 @@ If the decoder gets increasingly well and generates outputs with high likelihood
 This means the VAE could loose its encoding capabilities but still produce a high likelihood, a high objective~\cite{paulrubenstein2019}.
 
 \subsection{How can we name the parts of the loss of an VAE?}
-We can write the loss of the VAE as the per-sample sum of the \textit{reconstruction} and the \textit{regularizer} loss:
+We can write the loss of the VAE as the per-sample sum of the \I{reconstruction} and the \I{regularizer} loss:
 \begin{align}
   \L^{\t{recon}}_n &= - \E_{q_\φ(z|\B{x}_n)}[\log p_\θ(\B{x}_n|Z)]\\
   \L^{\t{reg}}_n &= D_{\t{KL}}(q_\φ(Z|\B{x}_n)||p_\θ(Z))\\
@@ -226,13 +226,13 @@ See the code in \texttt{code/vae.py}
 \subsection{ELBO during training}
 See Figure~\ref{fig:elbo} for the plots of the ELBO curves.
 
-\begin{figure}[]
+\begin{figure}
   \centering
   \begin{tabularx}{\linewidth}{XX}
     \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_20.pdf} &
     \includegraphics[width=\linewidth]{assignment_3/code/figures/vae_2.pdf}
   \end{tabularx}
-  \caption{The ELBO curves of the trainings and validation set for encoding sizes \(z\) of \textit{left} 20 and \textit{right} 2.}
+  \caption{The ELBO curves of the trainings and validation set for encoding sizes \(z\) of \I{left} 20 and \I{right} 2.}
   \label{fig:elbo}
 \end{figure}
 
@@ -333,7 +333,7 @@ With the changed objective for the generator we averted this problem and as we w
 See code in \texttt{code/gan.py} for the implementation.
 
 We build the Generator \(G\) as follows:
-a linear layer from latent space into a hidden size \(h=128\) followed by three linear layers with adjacent leaky ReLU (with \(\α=0.2\)) and batch normalization, respectively.
+a linear layer from latent space into a hidden size \(h=128\) followed by three linear layers with adjacent leaky ReLU (with \( \α =0.2\)) and batch normalization, respectively.
 Each linear layer doubles the hidden size.
 The final linear layer projects down to the inputs image size and we squash the outputs with a tanh.
 
@@ -363,13 +363,13 @@ Refer to Figure~\ref{fig:gan_samples} for samples taking during the training of 
 \begin{figure}
   \centering
   \includegraphics[width=0.6\linewidth]{assignment_3/code/figures/gan.pdf}
-  \caption{The loss of the two models \(D\) and \(G\) of the GAN during training.}
+  \caption{The loss of the two models \(D\) and \(G\) of the GAN during training. As shown above the optima is reached at \(\L_D = \log 4\) and \(\L_G = \log \÷{1}{2}\). We see that our GAN does approach the min-max optimum.}
   \label{fig:gan_loss}
 \end{figure}
 
 \subsection{Interpolation using the GAN}
 For an example of interpolating in the latent space of our GAN check Figure~\ref{fig:gan_interpolation}.
-We proceed equally to the manifold sampling in the VAE.
+We proceed equally to the manifold sampling in the VAE.\@
 We sample uniformly from the unit cube with latent dimensionality of the Generator.
 For each marginal dimension we build the equidistant steps (in Euclidean space) and transform the resulting intermediate points with the inverse cumulative density of the normal distribution.
 
@@ -381,7 +381,7 @@ For each marginal dimension we build the equidistant steps (in Euclidean space) 
 \end{figure}
 
 \section{Generative Normalizing Flows}
-\subsection{Update equation for the \textit{multivariate} flow}
+\subsection{Update equation for the \I{multivariate} flow}
 In our flow model we are using an invertible function \(f(\·): \ℝ^m \rightarrow \ℝ^m\) to map an input \(\B{x}\) to its next step \(\B{z} = f(\B{x})\) (therefore \(x = f^{-1}(\B{z})\)).
 The transformation \(f(\·)\) changes our density manifold \(p(X)\) of the input.
 Now this change can be seen locally as contractions and stretching of the manifold (like pulling around the manifold, intuitively).
@@ -471,6 +471,13 @@ See Figure~\ref{fig:nf} for the trainings progress.
   \end{tabularx}
   \caption{Samples from the normalizing flows model during training. From \I{top left} to \I{bottom right}: 1 epochs, 13 epochs, 26 epochs, 40 epochs}
   \label{fig:nf_samples}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\linewidth]{assignment_3/code/figures/nf_interpolate.png}
+  \caption{Equivalent to Figure~\ref{fig:gan_interpolation} we also perform interpolation with the NF model over the prior in latent space.}
+  \label{fig:nf_interpolate}
 \end{figure}
 
 \section{Conclusion}
