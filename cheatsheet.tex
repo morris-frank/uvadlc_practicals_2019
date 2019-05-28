@@ -1,0 +1,52 @@
+\documentclass[10pt, landscape]{article}
+\usepackage{morris}
+\usepackage[landscape]{geometry}
+\usepackage{multicol}
+
+\usepackage{blindtext}
+
+\geometry{top=1cm, right=1cm, bottom=1cm, left=1cm}
+\pagestyle{empty}
+
+\begin{document}
+    \raggedright
+    \raggedcolumns
+    \footnotesize
+
+    \begin{multicols*}{4}
+        \section{Math}
+        \begin{align}
+            \σ^s &= \E[X^2] - \E[X]^2\\
+            \pf{}{q_k}soft(q)_i &= soft(q)_i(\δ_{i,k} - soft(q)_k)\\
+            KL(p||q) &= \int p(x)\log(\÷{p(x)}{q(x)})dx\\
+        \end{align}
+        \section{Deep Generative Models}
+        \B{Boltzman dist:} \(p(x)=\÷{1}{Z}\exp(-E(x))\). Comp. of normal. Const. Z difficult. \B{Boltzmann machine} \(E(x)=-x^T W x -b^Tx\) x is \(256^2\) big. Instead \B{RBM} \(E(x) = -x^T W h - b^T x - c^T h\) with latent h.
+
+        \subsection{Variational Inference}
+        How est. posterior: MCMC or var. infer.: \(\φ^* = \argmin_\φ KL(q(\θ|\φ)||p(\θ|x))\), rev divergence (underestimate var, overest. with forward). \B{ELBO} \(\E_{q_\φ (\θ)} [\log p(x|\θ)] - KL(q_\φ(\θ)||p(\θ)) = \E_{q_\φ (\θ)} [\log p(x|\θ)] + \E_{q_\φ (\θ)} [\log p(\θ)] - \E_{q_\φ (\θ)} [\log q(\θ)]\)
+        with that \(\log p(x) = ELBO_{\θ,\φ}(x) + KL(q_\φ (\θ)||p(\θ|x))\). ELBO is vari. free Enrgy.
+
+        \subsection{Normalizing Flows}
+        \(\log p(x) = \log \π_o(z_o - \Σ_i^K|\det\÷{df_i}{dz_{i-1}}|)\)
+
+        \section{Bayesian Deep Learning}
+        Benefits of Bayesian: ensemble makes better accuracies, uncertainty estimates, sparsity makes model compression, active learning, distributed learning.
+        \B{Epistemnic uncertainty} ignorance which model generated the data. More data reduces this. For safety critical stuff, small datasets. \B{Aleatoric uncertainty} ignorance about the nature of the data. \I{Heteroscedastic} uncertainty about specific data \(\L = \÷{||y_i - \hat{y}_i||^2}{s\σ^2_i} + \log \σ_i\), \I{homoscedastic} uncertainty about the task, we might reduce by combining tasks. \(\L\) same but without idx. \B{MC Dropout} have d. during inference (by Bernoulli as vari. dist.) Then model prec. \(\tau = \÷{l^2p}{2N\λ}\).
+
+        \section{Deep Sequential models}
+        \subsection{Autoregressive models}
+        With sequential data we have:
+        \(x = [x_1,\…,x_k] \⇒ p(x) = \Π_{k=1}^D p(x_k|x_{j<k})\)
+        thus no param sharing and no \(\infty\) chains \(\⇒ p(x)\) is tractable.
+
+        \B{NADE}: fixed masks, conditionals modeled as MoG. \B{MADE}: masked conv.
+
+        \B{PixelRNN} seq. order over rows and channel R,G and B. Conditionals modeled with LSTM. Slow train and gen, but good gen.
+        \B{PixelCNN} model conds with masked convs. Is worse than RNN cause blind spot. Fix by having convs for left row and everything above cascading.
+        \B{PixelCNN++} dropout/whole pixels/discr log mix likelihood.
+        \B{PixelVAE} VAE+PixelCNN as the networks
+
+
+    \end{multicols*}
+\end{document}
