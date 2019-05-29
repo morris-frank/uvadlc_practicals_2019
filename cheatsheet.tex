@@ -20,15 +20,46 @@
             \pf{}{q_k}soft(q)_i &= soft(q)_i(\δ_{i,k} - soft(q)_k)\\
             KL(p||q) &= \int p(x)\log(\÷{p(x)}{q(x)})dx\\
         \end{align}
+
+        \section{NN and Optimization}
+        \B{RMSProp} and \B{ADAM} are actly worse for simple landscapes.
+        \B{Adam}: \(m_t = \β_1m_{t-1}+(1-\β_1)g_t\ \wedge\ v_t=\β_2 v_{t-1} + (1-\β_2)g_t^2\ \wedge\ \hat{m}_t = \÷{m_t}{1-\β_1^t}\ \wedge\ \hat{v}_t = \÷{v_t}{1-\β^t_2}\) init correction for sec momentum necessary (RMSProp+Mom is worse). \B{RMSProp}: \(r_t =\α r_{t-1} + (1-\α)g_t^2\ \wedge\ u_t = -\÷{\eta}{\sqrt{r_t}+\ε}g^t\ \wedge\ w_{t+1}=w_t+\eta_t u_t\)
+
+        \B{2ND-Order Optim} \(w_{t+1}=w_t - H^{-1}_\L \eta_t g_t\) weight updates by hessian but to big to compute :(.
+
+        \B{Activation functions} around 0, better not saturating, not bounded, center of it should be mean of inputs
+
+        \B{Batchnorm} whitening for activation functions, regularizes inference. Have linear function after batchnorm: at beginning its centered but can unlearn this.
+
+        \section{RNN}
+        \(c_t = \tanh(x_{t-1})+Ux_t+b,\quad \L=\Σ_t\L_t(c_t)\).
+        Grad is chain Jacobs: \(\pf{c_t}{c_k}=\Π^t_{j=k+1}\pf{c_j}{c_{j-1}}\) and
+        \(\pf{\L}{W} = \Σ_{\τ=1}^t \pf{\L_t}{c_t}\pf{c_t}{c_\τ}\pf{c_\τ}{W}\) with restr: \(||\pf{c_{t+1}}{c_t}|| \leq ||W^T||\·||\diag(\σ'(c_t))||\)
+
+        If \(||\pf{c_k}{c_{k-1}}||\leq \÷{1}{\λ_{max}}||\diag(\max(\σ'(\·)))||<1\) then \(\π^\τ_{k=1} \pf{c_k}{c_{k-1}}\) goes zero exp, van grads. Opposite is expld grads.
+
+        \section{GNN}
+        \B{DeepWalk}: randomwalk + LSTM with skip-gram, works not good new nodes need retrain.
+
+
         \section{Deep Generative Models}
         \B{Boltzman dist:} \(p(x)=\÷{1}{Z}\exp(-E(x))\). Comp. of normal. Const. Z difficult. \B{Boltzmann machine} \(E(x)=-x^T W x -b^Tx\) x is \(256^2\) big. Instead \B{RBM} \(E(x) = -x^T W h - b^T x - c^T h\) with latent h.
+
+        \subsection{GAN}
+        implicit density, sampling from PDF
+        \(\L=-÷{1}{2}\E_{x\sim p_{data}}\log D(x) - \÷{1}{2}\E_{z\sim p_z}\log(1-D(G(z)))\)
+        For better learning train for G the opposite, for approx ML estimate: \(J^G = -\÷{1}{2}\E_z \exp(\σ^{-1}(D(G(z))))\) (one opt, Goodfellow). Normal object resembles minimizing Jesnon-Shannon divergence: \(D_{JS}(a||b) = 0.5D_{KL}(a||(a+b)/2) + 0.5D_{KL}(b||(a+b)/2)\)
+        GAN problems: minimax instability, van grads, mode collapse (not due to divergence probably)
+        Improvements: Wasserstein dist, cBN, cGAN, label smoothing
 
         \subsection{Variational Inference}
         How est. posterior: MCMC or var. infer.: \(\φ^* = \argmin_\φ KL(q(\θ|\φ)||p(\θ|x))\), rev divergence (underestimate var, overest. with forward). \B{ELBO} \(\E_{q_\φ (\θ)} [\log p(x|\θ)] - KL(q_\φ(\θ)||p(\θ)) = \E_{q_\φ (\θ)} [\log p(x|\θ)] + \E_{q_\φ (\θ)} [\log p(\θ)] - \E_{q_\φ (\θ)} [\log q(\θ)]\)
         with that \(\log p(x) = ELBO_{\θ,\φ}(x) + KL(q_\φ (\θ)||p(\θ|x))\). ELBO is vari. free Enrgy.
+        Backprop in VAE: use REINFORCE to approx grad (high var grards slow down) or reparam trick
 
         \subsection{Normalizing Flows}
         \(\log p(x) = \log \π_o(z_o - \Σ_i^K|\det\÷{df_i}{dz_{i-1}}|)\)
+        requirements: \(f_i\) must be easily invertible and the Jacobian must be computable
 
         \section{Bayesian Deep Learning}
         Benefits of Bayesian: ensemble makes better accuracies, uncertainty estimates, sparsity makes model compression, active learning, distributed learning.
@@ -40,12 +71,25 @@
         \(x = [x_1,\…,x_k] \⇒ p(x) = \Π_{k=1}^D p(x_k|x_{j<k})\)
         thus no param sharing and no \(\infty\) chains \(\⇒ p(x)\) is tractable.
 
-        \B{NADE}: fixed masks, conditionals modeled as MoG. \B{MADE}: masked conv.
+        \B{NADE}: fixed masks, conditionals modeled as MoG. \B{MADE}: masked conv on an autoencoder.
 
         \B{PixelRNN} seq. order over rows and channel R,G and B. Conditionals modeled with LSTM. Slow train and gen, but good gen.
-        \B{PixelCNN} model conds with masked convs. Is worse than RNN cause blind spot. Fix by having convs for left row and everything above cascading.
-        \B{PixelCNN++} dropout/whole pixels/discr log mix likelihood.
+        \B{PixelCNN} model conds with masked convs. Is worse than RNN cause blind spot. Fix by having convs for left row and everything above cascading. Output 8bit softmax
+        \B{GatedPixelCNN} use two conv stacks, horiz and vart to not have blind sport
+        \B{PixelCNN++} dropout/whole pixels/discr log mix likelihood (from continuos output). PixelCNN is too powerful
         \B{PixelVAE} VAE+PixelCNN as the networks
+
+        \section{DeepRL}
+        Goal: max fut rewards (Q-func, value).
+        \(Q^\π(s_t,a_t)=\E(r_{t+1}+\γ r_{t+2}+\γ^2r_{t+3},\…|s_t,a_t) = \E_{s',a'}(r+\γ Q^\π(s',a')|s_t,a_t)\) (Bellman eq).
+        \B{Approaches}, -based, policy,value,model.
+
+        Optimal Value Function \(Q^*(s,a) = t_{t+1} + \γ\max_{a_{t+1}}Q^*(s_{t+1},a_{t+1}) = \E_{s'}(t+\γ\max_{a'}Q^*(s',a')|s,a)\)
+
+        Value based: \B{Q-learning}: minimize \(min(r+\γ \max_{a'}Q_t(s',a')-Q_t(s,a))^2\) \(Q_t(s,a)\) is your prev est Q-Value for state s and action a. The other stuff is your new estimate at new state, action. You want to minimize this to get better. Gradient ist then \(\pf{\L}{\θ} = \E[-2\· (r + \γ\max_{a'} Q(s',a',\θ) - Q(s,a,\θ))\pf{Q(s,a,\θ)}{\θ}]\)
+        Is unstable because target depends on Q, also seq breaks independence assump, highly correlated samples break SGD. Solut1: exp replay, play random steps from other history. Solt2: have a sec network which is updated once in a while to calc targets so that dies not interfere with grad calc stability. \I{Other tricks:} clip rewards to -1,1, skip frames
+
+        \B{Policy Optimization}: q-func often too expensive, must account for all states/actions. Instead directly learn policy \(\π_\θ(a|s)\): \(\pf{\L}{w}=\E[\pf{\log\π(a|s,w)}{w}Q^\π(s,a)]\)(deterministic) or \(\pf{\L}{w} = \E[\pf{Q^\π(s,a)}{a}\pf{a}{w}]\)(stochastic \(a=\π(s)\)) compute gradients with log-derivative trick, REINFORCE: \(\nabla_\θ \log p(x;\θ) = \÷{\nabla_\θ p(x;\θ)}{p(x;\θ)}\)
 
 
     \end{multicols*}
